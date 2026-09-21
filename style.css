@@ -773,8 +773,18 @@ button {
   .hero-zoom-stage {
     position: relative !important;
     top: 0 !important;
-    height: auto;
-    min-height: calc(100vh - 65px);
+    height: auto !important;
+    min-height: 100svh;
+    /* Use svh (small viewport height) on mobile for correct sizing */
+  }
+
+  /* Ensure hero content column fills space and doesn't overflow */
+  #hero-left-stage {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 12px 16px 24px !important;
   }
 }
 
@@ -4884,37 +4894,52 @@ button {
     padding: 0 16px;
   }
 
-  /* ── Hero section ── */
-  #hero-left-stage {
-    padding: 16px 16px 24px !important;
+  /* ── Hero: ETERNITY heading slot ── */
+  .eternity-heading-slot {
+    height: clamp(60px, 10vh, 90px) !important;
+    min-height: 60px !important;
   }
 
-  /* Hero tagline: wrap it on small screens */
+  /* Hero tagline: shrink and wrap */
   .hero-tagline-classic {
-    font-size: 0.65rem !important;
-    letter-spacing: 0.12em !important;
+    font-size: 0.6rem !important;
+    letter-spacing: 0.1em !important;
   }
 
-  /* Hero bottom grid: single column, reduced padding */
-  .hero-zoom-stage .grid {
+  /* Hero top row: hide the Worldwide status */
+  .hidden.sm\:flex.items-center.gap-4 {
+    display: none !important;
+  }
+
+  /* Hero bottom section: ensure it is never clipped */
+  #hero-left-stage > .w-full.pt-6 {
+    padding-top: 12px !important;
+    border-top-width: 1px;
+  }
+
+  /* Hero bottom grid: stack to 1 column */
+  #hero-left-stage .lg\:grid-cols-12 {
     grid-template-columns: 1fr !important;
-    gap: 20px !important;
+    gap: 14px !important;
   }
 
-  /* Hide third metric block on mobile */
-  .lg\:col-span-6 .grid-cols-2.sm\:grid-cols-3 > div:nth-child(3) {
-    display: none;
-  }
-
-  /* Metrics grid: 2 cols on mobile */
-  .grid-cols-2.sm\:grid-cols-3 {
+  /* Metrics strip: 2 equal columns */
+  #hero-left-stage .sm\:grid-cols-3 {
     grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
   }
 
-  /* Hero metric text */
-  .hero-zoom-stage .text-base,
-  .hero-zoom-stage .sm\:text-lg {
-    font-size: 0.8rem !important;
+  /* Metrics text: compact */
+  #hero-left-stage .text-base,
+  #hero-left-stage .sm\:text-lg {
+    font-size: 0.75rem !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Hero description paragraph */
+  #hero-left-stage .max-w-2xl {
+    font-size: 0.82rem !important;
+    line-height: 1.55 !important;
   }
 
   /* ── Services ecosystem ── */

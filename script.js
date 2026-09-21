@@ -651,6 +651,13 @@
     const canvas = document.getElementById('tubes-cursor-canvas');
     if (!canvas || canvas.__tubesApp) return;
 
+    // On mobile screens, the 3D tubes canvas renders too large and degrades performance.
+    // Hide it entirely on screens narrower than 768px.
+    if (window.innerWidth < 768) {
+      canvas.style.display = 'none';
+      return;
+    }
+
     let app = null;
 
     const randomColors = (count) => {
@@ -1059,11 +1066,11 @@
         startScale = (W * 0.85) / bounds.width;
       }
 
-      // Optical centering with upward offset to balance hero layout
-      const yOffset = isDesktop ? 40 : 20;
+      // Optical centering: no upward offset on mobile so ETERNITY sits dead-centre
+      const yOffset = isDesktop ? 40 : 0;
 
       stage.style.setProperty('--hero-center-offset-y', `${yOffset}px`);
-      stage.style.setProperty('--hero-flare-offset-y', `${yOffset + 28}px`);
+      stage.style.setProperty('--hero-flare-offset-y', `${yOffset + (isDesktop ? 28 : 0)}px`);
 
       startScreenX = W * 0.50;
       startScreenY = (H * 0.50) - yOffset;
@@ -1170,7 +1177,8 @@
     function renderLoop() {
       const diff = targetProgress - currentProgress;
       if (Math.abs(diff) > 0.0001) {
-        currentProgress += diff * 0.20;
+        // Slower lerp = smoother, less laggy zoom (0.12 instead of 0.20)
+        currentProgress += diff * 0.12;
         paint(currentProgress);
         animId = requestAnimationFrame(renderLoop);
       } else {
@@ -1191,8 +1199,11 @@
           targetProgress = 0;
         }
       } else {
+        // On mobile, hero-zoom-track height is auto. Use 80% of viewport height
+        // as the scroll distance that triggers the full zoom.
         const scrollY = window.scrollY || window.pageYOffset || 0;
-        targetProgress = Math.max(0, Math.min(1, scrollY / 275));
+        const mobileTravel = window.innerHeight * 0.8;
+        targetProgress = Math.max(0, Math.min(1, scrollY / mobileTravel));
       }
 
       if (immediate) {
