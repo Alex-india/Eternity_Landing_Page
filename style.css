@@ -4830,3 +4830,446 @@ button {
 .explore-standards-cta:hover .standards-arrow {
   transform: translateY(2px);
 }
+
+
+/* ============================================================
+   COMPREHENSIVE RESPONSIVE OVERRIDES
+   Full mobile support across all breakpoints
+   ============================================================ */
+
+/* ── Tablet (≤ 1024px) ── */
+@media (max-width: 1024px) {
+  /* Hero bottom grid: stack the description + metrics */
+  .grid.grid-cols-1.lg\:grid-cols-12 {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+
+  /* Process section padding reduction */
+  .process {
+    padding: 80px 0 90px;
+  }
+
+  /* Let's Work section */
+  .lets-work-section {
+    padding: 80px 20px 90px;
+  }
+
+  /* Footer inner */
+  .footer__inner {
+    grid-template-columns: 1fr 1fr;
+    gap: 36px;
+  }
+
+  /* Testimonials heading */
+  .testimonials-section .section-heading {
+    white-space: normal !important;
+    font-size: 1.35rem !important;
+  }
+
+  .testimonials-section .section-subtext {
+    white-space: normal !important;
+    font-size: 0.825rem !important;
+  }
+}
+
+/* ── Mobile (≤ 768px) ── */
+@media (max-width: 768px) {
+  /* ── Global ── */
+  html {
+    font-size: 14px;
+  }
+
+  .container {
+    padding: 0 16px;
+  }
+
+  /* ── Hero section ── */
+  #hero-left-stage {
+    padding: 16px 16px 24px !important;
+  }
+
+  /* Hero tagline: wrap it on small screens */
+  .hero-tagline-classic {
+    font-size: 0.65rem !important;
+    letter-spacing: 0.12em !important;
+  }
+
+  /* Hero bottom grid: single column, reduced padding */
+  .hero-zoom-stage .grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+
+  /* Hide third metric block on mobile */
+  .lg\:col-span-6 .grid-cols-2.sm\:grid-cols-3 > div:nth-child(3) {
+    display: none;
+  }
+
+  /* Metrics grid: 2 cols on mobile */
+  .grid-cols-2.sm\:grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Hero metric text */
+  .hero-zoom-stage .text-base,
+  .hero-zoom-stage .sm\:text-lg {
+    font-size: 0.8rem !important;
+  }
+
+  /* ── Services ecosystem ── */
+  .services-ecosystem-section {
+    padding: 40px 0 32px;
+  }
+
+  .services-ecosystem-section .container {
+    padding: 0 12px;
+  }
+
+  .services-ecosystem-section .section-heading {
+    font-size: 1.1rem !important;
+  }
+
+  /* ── Process section ── */
+  .process {
+    padding: 64px 0 72px;
+  }
+
+  .process .section-header {
+    margin-bottom: 36px;
+  }
+
+  .process .section-heading {
+    font-size: clamp(1.6rem, 5vw, 2.2rem) !important;
+  }
+
+  /* ── Testimonials ── */
+  .testimonials-section {
+    padding: 64px 0 72px !important;
+  }
+
+  .testimonials-compact-container {
+    padding: 0 16px;
+  }
+
+  .testimonials-header-flex {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .testimonials-header-left {
+    text-align: center;
+  }
+
+  .testimonials-label-row {
+    justify-content: center;
+  }
+
+  .testimonials-section .section-heading {
+    white-space: normal !important;
+    font-size: 1.25rem !important;
+    text-align: center;
+  }
+
+  .testimonials-section .section-subtext {
+    white-space: normal !important;
+    font-size: 0.8rem !important;
+    text-align: center !important;
+  }
+
+  .testimonials-sphere-container {
+    width: 110px;
+    height: 110px;
+  }
+
+  /* ── Let's Work section ── */
+  .lets-work-section {
+    padding: 64px 16px 72px;
+    min-height: auto;
+  }
+
+  .lets-work-heading {
+    font-size: clamp(2rem, 10vw, 3.5rem) !important;
+  }
+
+  .lets-work-desc {
+    font-size: 0.875rem;
+    text-align: center;
+    padding: 0 8px;
+  }
+
+  .lets-work-contacts {
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+  }
+
+  .lets-work-sep {
+    display: none;
+  }
+
+  .lets-work-actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .lets-work-inquiry-trigger,
+  .lets-work-reset-btn {
+    width: 100%;
+    max-width: 320px;
+    justify-content: center;
+  }
+
+  .lets-work-book-pill {
+    padding: 14px 24px;
+  }
+
+  /* ── Footer ── */
+  .footer__inner {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding-top: 40px;
+    padding-bottom: 32px;
+  }
+
+  .footer__bottom-inner {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .footer__desc {
+    max-width: 100%;
+  }
+
+  /* ── Auth Modals ── */
+  .auth-modal {
+    padding: 12px;
+    align-items: flex-end;
+  }
+
+  .auth-modal__panel {
+    padding: 24px 16px 20px;
+    border-radius: 0;
+    max-height: 95vh;
+  }
+
+  .inquiry-modal__panel {
+    max-width: 100%;
+  }
+
+  /* ── Fixed contact widget ── */
+  .fixed-contact-widget {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .gleam-edge-contact {
+    padding: 0.7rem 1.2rem;
+    font-size: 0.8rem;
+  }
+
+  /* ── Mobile nav menu ── */
+  #mobile-nav-menu {
+    top: 52px !important;
+  }
+
+  /* ── Stat items ── */
+  .stat-item {
+    padding: 12px 16px;
+    min-width: 50%;
+  }
+
+  .stat-item__number {
+    font-size: 1.5rem;
+  }
+}
+
+/* ── Small mobile (≤ 640px) ── */
+@media (max-width: 640px) {
+  /* ── Hero ── */
+  #hero-left-stage {
+    padding: 12px 12px 20px !important;
+  }
+
+  .hero-tagline-classic {
+    font-size: 0.55rem !important;
+    letter-spacing: 0.08em !important;
+  }
+
+  /* Only show 2 hero metrics */
+  .grid-cols-2.sm\:grid-cols-3 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Hero heading slot shrinks on small screens */
+  .eternity-heading-slot {
+    height: clamp(70px, 13vh, 100px) !important;
+    min-height: 70px !important;
+  }
+
+  /* Hero description */
+  #hero-left-stage .max-w-2xl {
+    font-size: 0.8rem !important;
+  }
+
+  /* Explore Standards CTA */
+  .explore-standards-cta {
+    padding: 0.55rem 1rem;
+    font-size: 0.68rem;
+  }
+
+  /* ── Section headings across the page ── */
+  .section-heading {
+    font-size: clamp(1.4rem, 5vw, 1.85rem) !important;
+  }
+
+  /* ── Services ── */
+  .services-ecosystem-section {
+    padding: 32px 0 24px;
+  }
+
+  /* ── Process ── */
+  .process {
+    padding: 48px 0 56px;
+  }
+
+  .process-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .process-title {
+    font-size: 1.05rem;
+  }
+
+  /* ── Testimonials section header ── */
+  .testimonials-section {
+    padding: 48px 0 56px !important;
+  }
+
+  .testimonials-sphere-container {
+    width: 90px;
+    height: 90px;
+  }
+
+  /* ── Let's Work ── */
+  .lets-work-section {
+    padding: 48px 12px 56px;
+  }
+
+  .lets-work-heading {
+    font-size: clamp(1.75rem, 9vw, 3rem) !important;
+  }
+
+  .lets-work-circle-wrap {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  /* ── Footer ── */
+  .footer__inner {
+    padding-top: 32px;
+    padding-bottom: 24px;
+  }
+
+  /* ── Stats bar ── */
+  .stats-bar {
+    padding: 20px 0;
+  }
+
+  .stat-item {
+    min-width: 100%;
+    padding: 10px 16px;
+  }
+
+  .stat-item__number {
+    font-size: 1.4rem;
+  }
+
+  /* ── Auth modals ── */
+  .auth-modal__panel {
+    padding: 20px 14px 18px;
+  }
+
+  .auth-modal__title {
+    font-size: 1.25rem;
+  }
+
+  /* ── Contact widget ── */
+  .fixed-contact-widget {
+    bottom: 12px;
+    right: 12px;
+  }
+
+  .gleam-edge-contact {
+    padding: 0.6rem 1rem;
+    font-size: 0.75rem;
+    gap: 6px;
+  }
+
+  /* Testimonial modal */
+  #testimonial-modal .testimonial-modal-card {
+    max-width: 100%;
+  }
+}
+
+/* ── Extra small (≤ 480px) ── */
+@media (max-width: 480px) {
+  html {
+    font-size: 13px;
+  }
+
+  /* Hero: single metric column */
+  .grid-cols-2.sm\:grid-cols-3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Process */
+  .process-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Let's work contacts */
+  .lets-work-book-pill {
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
+  }
+
+  /* Footer */
+  .footer__links {
+    gap: 8px;
+  }
+
+  /* Services section heading */
+  .services-ecosystem-section .section-heading {
+    font-size: 1rem !important;
+  }
+
+  /* Ensure hero tagline doesn't break layout */
+  .hero-zoom-stage .w-full.flex.items-center.justify-between {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  /* Auth panel */
+  .auth-modal {
+    padding: 8px;
+  }
+
+  .auth-modal__panel {
+    padding: 18px 12px 16px;
+  }
+
+  /* Section heading: consistent minimal size */
+  .section-heading {
+    font-size: clamp(1.25rem, 5.5vw, 1.6rem) !important;
+  }
+}
