@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: eternity
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: cd server && npm install
+    startCommand: node server/index.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MEETING_URL
+        value: https://cal.com/aryan-raj-eternity/quick-talk
+      - key: BREVO_SENDER_NAME
+        value: Aryan Raj | ETERNITY
+      - key: BREVO_SENDER_EMAIL
+        value: harshraj1603@gmail.com
+      - key: ADMIN_NOTIFICATION_EMAIL
+        value: harshraj1603@gmail.com
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false

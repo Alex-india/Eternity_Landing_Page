@@ -1,681 +1,1945 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" class="h-full">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Eternity — Website & Application Development. We build digital solutions that power businesses everywhere. Full Stack, Cross Platform, Scalable, Secure. From idea to deployment." />
-  <meta name="keywords" content="web development, app development, full stack, mobile apps, software development, Eternity" />
-  <meta property="og:title" content="Eternity — Website & Application Development" />
-  <meta property="og:description" content="We build digital solutions that power businesses everywhere. Full Stack, Cross Platform, Scalable, Secure." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://www.eternity.dev" />
-  <title>Eternity — Website & Application Development</title>
+  <title>ETERNITY — Web + Mobile Engineering</title>
+  <!-- Google Fonts: Plus Jakarta Sans, Space Grotesk, Cinzel & Cormorant Garamond -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
-  <!-- Prevent flash of wrong theme before CSS/JS loads -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    (function(){
-      var t = localStorage.getItem('eternity-theme');
-      if (!t) t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', t);
-    })();
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['Space Grotesk', 'monospace'],
+            classic: ['Cinzel', 'Cormorant Garamond', 'Georgia', 'serif'],
+            serif: ['Cormorant Garamond', 'Cinzel', 'Georgia', 'serif'],
+          },
+          colors: {
+            obsidian: '#050505',
+            surface: '#0A0A0A',
+            line: '#1F1F1F',
+          }
+        }
+      }
+    }
   </script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    html,
+    body,
+    main {
+      background-color: #050505 !important;
+      color: #EDEDED;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: clip;
+    }
+
+    /* Ultra-fine architectural grid background */
+    .bg-grid {
+      background-size: 60px 60px;
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+
+    /* Sharp editorial typography tracking */
+    .tracking-widest-editorial {
+      letter-spacing: 0.25em;
+    }
+
+    /* Stark corporate white panel styling */
+    .white-auth-panel {
+      background: #FFFFFF;
+      color: #0A0A0A;
+      border-left: 1px solid #E5E5E5;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #050505;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #262626;
+    }
+  </style>
 </head>
-<body>
 
-  <!-- ========== NAVBAR ========== -->
-  <header class="navbar" id="navbar">
-    <div class="container navbar__inner">
+<body class="selection:bg-white selection:text-black">
 
-      <a href="#home" class="navbar__logo" id="navbar-logo">
-        <span class="logo-monogram">EA</span>
-        <div class="logo-text">
-          <span class="logo-name">ETERNITY</span>
-          <span class="logo-tagline">Website & Application Development</span>
-        </div>
+  <div class="fixed inset-0 bg-grid pointer-events-none z-0"></div>
+
+  <header id="site-header"
+    class="site-header relative z-40 w-full px-4 sm:px-8 lg:px-16 py-3 sm:py-3.5 flex items-center justify-between border-b border-line bg-[#050505]/95 backdrop-blur-sm sticky top-0">
+    <div class="flex items-center gap-3 sm:gap-4">
+      <span
+        class="header-tagline hidden sm:inline-block font-mono text-xs uppercase tracking-widest-editorial text-neutral-400 transition-opacity">EST.
+        2024</span>
+      <span class="hidden sm:inline-block w-8 h-[1px] bg-neutral-700"></span>
+      <a href="#home" class="text-sm font-semibold tracking-wider text-white">ETERNITY</a>
+    </div>
+
+    <nav class="hidden md:flex items-center gap-10">
+      <a href="#services"
+        class="text-xs font-mono uppercase tracking-widest text-neutral-400 hover:text-white transition-colors">Engineering</a>
+      <a href="#about"
+        class="text-xs font-mono uppercase tracking-widest text-neutral-400 hover:text-white transition-colors">Standards</a>
+      <a href="#reviews"
+        class="text-xs font-mono uppercase tracking-widest text-neutral-400 hover:text-white transition-colors">Reviews</a>
+      <a href="#contact"
+        class="text-xs font-mono uppercase tracking-widest text-neutral-400 hover:text-white transition-colors">Contact</a>
+    </nav>
+
+    <div class="flex items-center gap-4 sm:gap-6">
+      <a href="#contact"
+        class="header-cta-btn hidden sm:inline-flex text-xs font-mono uppercase tracking-widest px-4 py-2 bg-white text-black hover:bg-neutral-200 transition-all">
+        Inquire
       </a>
-
-      <nav class="navbar__links" id="nav-links" role="navigation" aria-label="Main navigation">
-        <a href="#home" class="nav-link">Home</a>
-        <a href="#services" class="nav-link">Services</a>
-        <a href="#work" class="nav-link">Work</a>
-        <a href="#about" class="nav-link">About</a>
-        <a href="#contact" class="nav-link">Contact</a>
-      </nav>
-
-      <!-- Auth Buttons (logged-out state) -->
-      <div class="navbar__auth" id="navbar-auth">
-        <button class="btn btn--ghost" id="btn-open-login">Log In</button>
-        <button class="btn btn--primary" id="btn-open-signup">Sign Up</button>
-      </div>
-
-      <!-- User Menu (logged-in state, hidden by default) -->
-      <div class="user-menu" id="user-menu" style="display:none;">
-        <button class="user-menu__trigger" id="user-menu-trigger" aria-haspopup="true" aria-expanded="false">
-          <span class="user-avatar" id="user-avatar-initials">JD</span>
-          <span class="user-name" id="user-display-name">John Doe</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <div class="user-dropdown" id="user-dropdown" role="menu">
-          <div class="user-dropdown__header">
-            <span class="user-dropdown__name" id="dropdown-name">John Doe</span>
-            <span class="user-dropdown__email" id="dropdown-email">john@example.com</span>
-          </div>
-          <div class="user-dropdown__divider"></div>
-          <button class="user-dropdown__item" id="btn-logout" role="menuitem">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            Log Out
-          </button>
-        </div>
-      </div>
-
-      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark mode" title="Toggle theme">
-        <!-- Sun icon (dark mode: click to switch to light) -->
-        <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="5"/>
-          <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-        </svg>
-        <!-- Moon icon (light mode: click to switch to dark) -->
-        <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      <button onclick="toggleMobileNav()"
+        class="md:hidden text-xs font-mono uppercase tracking-widest text-neutral-300 hover:text-white transition-colors p-2"
+        aria-label="Toggle navigation">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
         </svg>
       </button>
-
-      <button class="hamburger" id="hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
-        <span class="hamburger__line"></span>
-        <span class="hamburger__line"></span>
-        <span class="hamburger__line"></span>
-      </button>
-
     </div>
   </header>
 
-  <!-- Mobile Drawer -->
-  <div class="mobile-drawer" id="mobile-drawer" role="dialog" aria-modal="true" aria-label="Navigation menu">
-    <div class="mobile-drawer__overlay" id="drawer-overlay"></div>
-    <nav class="mobile-drawer__panel" id="drawer-panel">
-      <button class="mobile-drawer__close" id="drawer-close" aria-label="Close navigation">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-      <a href="#home" class="mobile-nav-link">Home</a>
-      <a href="#services" class="mobile-nav-link">Services</a>
-      <a href="#work" class="mobile-nav-link">Work</a>
-      <a href="#about" class="mobile-nav-link">About</a>
-      <a href="#contact" class="mobile-nav-link">Contact</a>
-      <!-- Mobile Auth (logged-out) -->
-      <div class="mobile-auth" id="mobile-auth">
-        <button class="btn btn--outline mobile-auth__login" id="mobile-btn-login">Log In</button>
-        <button class="btn btn--primary mobile-auth__signup" id="mobile-btn-signup">Sign Up</button>
-      </div>
-      <!-- Mobile Auth (logged-in) -->
-      <div class="mobile-user" id="mobile-user" style="display:none;">
-        <div class="mobile-user__info">
-          <span class="user-avatar" id="mobile-user-avatar">JD</span>
-          <div>
-            <span class="mobile-user__name" id="mobile-user-name">John Doe</span>
-            <span class="mobile-user__email" id="mobile-user-email">john@example.com</span>
-          </div>
-        </div>
-        <button class="btn btn--outline mobile-logout-btn" id="mobile-btn-logout">Log Out</button>
-      </div>
-    </nav>
-  </div>
-
-  <!-- ========== LOGIN MODAL ========== -->
-  <div class="auth-modal" id="login-modal" role="dialog" aria-modal="true" aria-labelledby="login-title" style="display:none;">
-    <div class="auth-modal__overlay" id="login-overlay"></div>
-    <div class="auth-modal__panel">
-      <button class="auth-modal__close" id="login-close" aria-label="Close login">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-
-      <div class="auth-modal__logo">
-        <span class="logo-monogram">EA</span>
-      </div>
-      <h2 class="auth-modal__title" id="login-title">Welcome Back</h2>
-      <p class="auth-modal__sub">Log in to your Eternity account</p>
-
-      <div class="auth-alert auth-alert--error" id="login-error" style="display:none;"></div>
-      <div class="auth-alert auth-alert--success" id="login-success" style="display:none;"></div>
-
-      <form class="auth-form" id="login-form" novalidate>
-        <div class="form-group" id="login-email-group">
-          <label class="form-label" for="login-email">Email Address</label>
-          <div class="form-input-wrap">
-            <svg class="form-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            <input type="email" id="login-email" class="form-input" placeholder="hello@example.com" autocomplete="email" required />
-          </div>
-          <span class="form-error" id="login-email-error"></span>
-        </div>
-
-        <div class="form-group" id="login-pass-group">
-          <label class="form-label" for="login-password">Password</label>
-          <div class="form-input-wrap">
-            <svg class="form-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <input type="password" id="login-password" class="form-input" placeholder="Your password" autocomplete="current-password" required />
-            <button type="button" class="form-eye" id="login-eye" aria-label="Toggle password visibility">
-              <svg class="eye-show" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              <svg class="eye-hide" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-            </button>
-          </div>
-          <span class="form-error" id="login-pass-error"></span>
-        </div>
-
-        <button type="submit" class="btn btn--primary auth-form__submit" id="login-submit">
-          <span class="btn-text">Log In</span>
-          <span class="btn-spinner" style="display:none;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-          </span>
-        </button>
-      </form>
-
-      <p class="auth-modal__switch">Don't have an account? <button class="auth-switch-link" id="switch-to-signup">Sign Up</button></p>
+  <!-- Mobile Nav Dropdown -->
+  <div id="mobile-nav-menu"
+    class="hidden md:hidden fixed inset-x-0 top-[65px] bg-[#0A0A0A] border-b border-line p-6 z-50 flex flex-col gap-4 font-mono text-xs uppercase tracking-widest">
+    <a href="#services" onclick="toggleMobileNav()" class="text-neutral-300 hover:text-white py-2">Engineering</a>
+    <a href="#about" onclick="toggleMobileNav()" class="text-neutral-300 hover:text-white py-2">Standards</a>
+    <a href="#reviews" onclick="toggleMobileNav()" class="text-neutral-300 hover:text-white py-2">Reviews</a>
+    <a href="#contact" onclick="toggleMobileNav()" class="text-neutral-300 hover:text-white py-2">Contact</a>
+    <div class="pt-4 border-t border-line">
+      <a href="#contact" onclick="toggleMobileNav()"
+        class="block w-full py-2.5 bg-white text-black text-center text-xs font-mono uppercase tracking-widest hover:bg-neutral-200 transition-colors">Inquire</a>
     </div>
   </div>
 
-  <!-- ========== SIGNUP MODAL ========== -->
-  <div class="auth-modal" id="signup-modal" role="dialog" aria-modal="true" aria-labelledby="signup-title" style="display:none;">
-    <div class="auth-modal__overlay" id="signup-overlay"></div>
-    <div class="auth-modal__panel">
-      <button class="auth-modal__close" id="signup-close" aria-label="Close signup">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
+  <main class="relative z-10">
 
-      <div class="auth-modal__logo">
-        <span class="logo-monogram">EA</span>
-      </div>
-      <h2 class="auth-modal__title" id="signup-title">Create Account</h2>
-      <p class="auth-modal__sub">Join Eternity and get started today</p>
+    <!-- ========== ARCHITECTURAL HERO SECTION (SCROLL PINNED ZOOM) ========== -->
+    <section id="home" class="hero-zoom-track relative z-10 w-full">
+      <div
+        class="hero-zoom-stage w-full flex flex-col justify-between min-h-[calc(100vh-65px)] bg-obsidian overflow-hidden">
 
-      <div class="auth-alert auth-alert--error" id="signup-error" style="display:none;"></div>
-      <div class="auth-alert auth-alert--success" id="signup-success" style="display:none;"></div>
+        <!-- Ambient Hero Stage: 3D Neon Tubes Flare & Celestial Canvas (Shifted Upwards Behind ETERNITY) -->
+        <div id="hero-flare-stage"
+          class="hero-flare-stage absolute inset-0 w-full h-full pointer-events-none z-0 hero-fade-item">
+          <canvas class="tubes-cursor-canvas absolute inset-0 w-full h-full pointer-events-none z-0"
+            id="tubes-cursor-canvas" aria-hidden="true"></canvas>
+          <canvas class="gp-particles-canvas absolute inset-0 w-full h-full pointer-events-none z-0"
+            id="gp-particles-canvas" aria-hidden="true"></canvas>
+        </div>
 
-      <form class="auth-form" id="signup-form" novalidate>
-        <div class="form-row">
-          <div class="form-group" id="signup-fname-group">
-            <label class="form-label" for="signup-fname">First Name</label>
-            <div class="form-input-wrap">
-              <svg class="form-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              <input type="text" id="signup-fname" class="form-input" placeholder="John" autocomplete="given-name" required />
+        <!-- Full-Width Hero Content (Fades on Scroll) -->
+        <div id="hero-left-stage"
+          class="relative z-10 w-full flex-1 flex flex-col justify-between px-4 sm:px-8 lg:px-20 pt-4 sm:pt-6 pb-6 sm:pb-8 lg:pt-10 lg:pb-12 overflow-hidden hero-fade-item">
+
+          <!-- Top Area: Tagline and Operational Status -->
+          <div
+            class="w-full flex items-center justify-between font-mono text-xs text-neutral-400 uppercase tracking-widest pb-4 border-b border-line/60 relative z-10">
+            <div>
+              <span
+                class="hero-tagline-classic text-white font-bold text-xs sm:text-[13px] tracking-[0.22em] drop-shadow-[0_0_14px_rgba(255,255,255,0.25)]">Turning
+                Your Dream Websites &amp; Mobile Apps Into Reality..</span>
             </div>
-            <span class="form-error" id="signup-fname-error"></span>
-          </div>
-          <div class="form-group" id="signup-lname-group">
-            <label class="form-label" for="signup-lname">Last Name</label>
-            <div class="form-input-wrap">
-              <svg class="form-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              <input type="text" id="signup-lname" class="form-input" placeholder="Doe" autocomplete="family-name" required />
+            <div class="hidden sm:flex items-center gap-4 text-neutral-500">
+              <span class="text-neutral-400">Available For New Projects</span>
+              <span class="text-neutral-700">//</span>
+              <span>Worldwide</span>
             </div>
-            <span class="form-error" id="signup-lname-error"></span>
           </div>
-        </div>
 
-        <div class="form-group" id="signup-email-group">
-          <label class="form-label" for="signup-email">Email Address</label>
-          <div class="form-input-wrap">
-            <svg class="form-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            <input type="email" id="signup-email" class="form-input" placeholder="hello@example.com" autocomplete="email" required />
-          </div>
-          <span class="form-error" id="signup-email-error"></span>
-        </div>
-
-        <div class="form-group" id="signup-pass-group">
-          <label class="form-label" for="signup-password">Password</label>
-          <div class="form-input-wrap">
-            <svg class="form-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <input type="password" id="signup-password" class="form-input" placeholder="Min 8 characters" autocomplete="new-password" required />
-            <button type="button" class="form-eye" id="signup-eye" aria-label="Toggle password visibility">
-              <svg class="eye-show" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              <svg class="eye-hide" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-            </button>
-          </div>
-          <div class="password-strength" id="pass-strength">
-            <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
-            <span class="strength-label" id="strength-label"></span>
-          </div>
-          <span class="form-error" id="signup-pass-error"></span>
-        </div>
-
-        <div class="form-group" id="signup-cpass-group">
-          <label class="form-label" for="signup-confirm">Confirm Password</label>
-          <div class="form-input-wrap">
-            <svg class="form-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <input type="password" id="signup-confirm" class="form-input" placeholder="Repeat password" autocomplete="new-password" required />
-            <button type="button" class="form-eye" id="confirm-eye" aria-label="Toggle confirm password visibility">
-              <svg class="eye-show" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              <svg class="eye-hide" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-            </button>
-          </div>
-          <span class="form-error" id="signup-cpass-error"></span>
-        </div>
-
-        <button type="submit" class="btn btn--primary auth-form__submit" id="signup-submit">
-          <span class="btn-text">Create Account</span>
-          <span class="btn-spinner" style="display:none;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-          </span>
-        </button>
-      </form>
-
-      <p class="auth-modal__switch">Already have an account? <button class="auth-switch-link" id="switch-to-login">Log In</button></p>
-    </div>
-  </div>
-
-  <main>
-
-    <!-- ========== HERO SECTION ========== -->
-    <section class="hero" id="home">
-      <div class="container hero__inner">
-
-        <div class="hero__content fade-in">
-          <span class="section-label">From Concept to Launch — We Make It Real</span>
-          <h1 class="hero__headline">
-            We Build<br />
-            <span class="text-accent">Digital Solutions</span><br />
-            That Power Businesses<br />
-            Everywhere.
-          </h1>
-          <p class="hero__subtext">
-            Full Stack. Cross Platform. Scalable. Secure.<br />
-            From idea to deployment — we build, launch and grow<br />
-            with technology that delivers results.
-          </p>
-          <div class="hero__ctas">
-            <a href="#services" class="btn btn--primary" id="hero-services-btn">Our Services</a>
-            <a href="#contact" class="btn btn--outline" id="hero-quote-btn">Get a Quote</a>
-          </div>
-        </div>
-
-        <div class="hero__visual fade-in fade-in--delay">
-          <div class="mockup-card">
-            <div class="mockup-header">
-              <div class="mockup-dots">
-                <span class="mockup-dot mockup-dot--red"></span>
-                <span class="mockup-dot mockup-dot--yellow"></span>
-                <span class="mockup-dot mockup-dot--green"></span>
-              </div>
-              <span class="mockup-url">eternity.dev/dashboard</span>
+          <!-- Middle Reserved Slot (Dedicated to Centered ETERNITY text) -->
+          <div class="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-10"
+            style="transform: translateY(calc(-1 * var(--hero-center-offset-y, 75px)));">
+            <div
+              class="eternity-heading-slot relative w-full max-w-7xl mx-auto flex items-center justify-center select-none pointer-events-none">
+              <h1 class="sr-only">ETERNITY</h1>
             </div>
-            <div class="mockup-body">
-              <div class="mockup-sidebar">
-                <div class="mockup-sidebar-item mockup-sidebar-item--active"></div>
-                <div class="mockup-sidebar-item"></div>
-                <div class="mockup-sidebar-item"></div>
-                <div class="mockup-sidebar-item"></div>
-                <div class="mockup-sidebar-item"></div>
-              </div>
-              <div class="mockup-content">
-                <div class="mockup-stats-row">
-                  <div class="mockup-stat">
-                    <span class="mockup-stat__label">Revenue</span>
-                    <span class="mockup-stat__value">$84.2k</span>
-                    <span class="mockup-stat__change positive">+12.4%</span>
-                  </div>
-                  <div class="mockup-stat">
-                    <span class="mockup-stat__label">Users</span>
-                    <span class="mockup-stat__value">14,830</span>
-                    <span class="mockup-stat__change positive">+8.1%</span>
-                  </div>
-                  <div class="mockup-stat">
-                    <span class="mockup-stat__label">Uptime</span>
-                    <span class="mockup-stat__value">99.9%</span>
-                    <span class="mockup-stat__change neutral">Stable</span>
-                  </div>
+          </div>
+
+          <!-- Bottom Area: Statement, CTAs, and Metrics Grid -->
+          <div class="w-full pt-6 border-t border-line/60 relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
+              <div class="lg:col-span-6 space-y-5">
+                <p class="max-w-2xl text-sm sm:text-base text-neutral-400 font-light leading-relaxed">
+                  We engineer the software your business cannot afford to get wrong. <br class="hidden sm:inline" />
+                  High-performance websites and mobile applications built for mission-critical scale.
+                </p>
+
+                <div class="flex items-center">
+                  <a href="#services" class="explore-standards-cta" aria-label="Explore Standards">
+                    <span>Explore Standards</span>
+                    <span class="standards-arrow">&darr;</span>
+                  </a>
                 </div>
-                <div class="mockup-chart">
-                  <div class="chart-bars">
-                    <div class="chart-bar" style="height: 40%"></div>
-                    <div class="chart-bar" style="height: 65%"></div>
-                    <div class="chart-bar" style="height: 50%"></div>
-                    <div class="chart-bar chart-bar--accent" style="height: 80%"></div>
-                    <div class="chart-bar" style="height: 55%"></div>
-                    <div class="chart-bar chart-bar--accent" style="height: 90%"></div>
-                    <div class="chart-bar" style="height: 70%"></div>
-                  </div>
+              </div>
+
+              <div class="lg:col-span-6 grid grid-cols-2 sm:grid-cols-3 gap-6 font-mono text-xs text-neutral-400">
+                <div>
+                  <span class="block text-white font-bold text-base sm:text-lg">01 / ARCHITECTURE</span>
+                  <span class="text-neutral-500 text-xs">Fault-tolerant distributed systems</span>
                 </div>
-                <div class="mockup-table">
-                  <div class="mockup-table-row mockup-table-row--header">
-                    <span>Project</span><span>Status</span><span>Progress</span>
-                  </div>
-                  <div class="mockup-table-row">
-                    <span>App Redesign</span>
-                    <span class="status-badge status-badge--live">Live</span>
-                    <div class="progress-bar"><div class="progress-fill" style="width:88%"></div></div>
-                  </div>
-                  <div class="mockup-table-row">
-                    <span>API Integration</span>
-                    <span class="status-badge status-badge--dev">Dev</span>
-                    <div class="progress-bar"><div class="progress-fill" style="width:62%"></div></div>
-                  </div>
-                  <div class="mockup-table-row">
-                    <span>Landing Page</span>
-                    <span class="status-badge status-badge--live">Live</span>
-                    <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
-                  </div>
+                <div>
+                  <span class="block text-white font-bold text-base sm:text-lg">02 / INTERFACE</span>
+                  <span class="text-neutral-500 text-xs">Precision design &amp; fluid UX</span>
+                </div>
+                <div class="hidden sm:block">
+                  <span class="block text-white font-bold text-base sm:text-lg">03 / EXECUTION</span>
+                  <span class="text-neutral-500 text-xs">Mission-critical performance</span>
                 </div>
               </div>
             </div>
           </div>
+
         </div>
 
-      </div>
+        <!-- SVG Art & Live Text Clip Camera (Stage-Wide Native Vector Engine - Zero Blur) -->
+        <svg data-gp-art id="gp-art" class="absolute inset-0 w-full h-full pointer-events-none overflow-visible z-20"
+          aria-hidden="true" focusable="false">
+          <defs>
+            <clipPath id="gp-clip-eternity" clipPathUnits="userSpaceOnUse">
+              <text data-gp-glyph id="gp-glyph" x="0" y="0"
+                style="font-family: 'Plus Jakarta Sans', 'Arial Black', sans-serif; font-weight: 800; font-size: 100px; font-kerning: none; font-variant-ligatures: none; letter-spacing: 0;">ETERNITY</text>
+            </clipPath>
+          </defs>
+        </svg>
 
-      <!-- Stats Bar -->
-      <div class="stats-bar">
-        <div class="container stats-bar__inner">
-          <div class="stat-item">
-            <span class="stat-item__number">50+</span>
-            <span class="stat-item__label">Projects Delivered</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <span class="stat-item__number">30+</span>
-            <span class="stat-item__label">Happy Clients</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <span class="stat-item__number">99%</span>
-            <span class="stat-item__label">Client Satisfaction</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <span class="stat-item__number">24/7</span>
-            <span class="stat-item__label">Support</span>
-          </div>
+        <!-- Clean Vector Fill Plane Clipped by SVG ClipPath -->
+        <div id="gp-field" class="absolute inset-0 w-full h-full pointer-events-none z-20 bg-white" aria-hidden="true">
         </div>
+
       </div>
     </section>
 
-    <!-- ========== SERVICES SECTION ========== -->
-    <section class="services" id="services">
-      <div class="container">
+    <!-- ========== UNIFIED SERVICES & PLATFORM ECOSYSTEM (SINGLE MASTER COMPONENT) ========== -->
+    <section class="services-ecosystem-section" id="services">
+      <div id="integrations" class="sr-only" aria-hidden="true"></div>
+      <div class="container mx-auto">
+        <!-- Section Header -->
         <div class="section-header fade-in">
-          <span class="section-label">What We Do</span>
-          <h2 class="section-heading">Services Built for Real<br />Business Needs</h2>
-          <p class="section-subtext">We design and develop digital products from scratch — tailored for your goals, your users, and your growth.</p>
+          <h2 class="section-heading">Services Built for Real Business Needs</h2>
         </div>
 
-        <div class="services-grid">
+        <!-- Two Separate Standalone Components: Big Black Container (60%) & Services Component on White Background (30%) with Gap -->
+        <div class="services-dual-layout fade-in">
 
-          <div class="service-card fade-in" id="service-websites">
-            <div class="service-card__icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-              </svg>
-            </div>
-            <h3 class="service-card__title">Responsive Websites</h3>
-            <p class="service-card__desc">Fast. Modern. SEO Ready. We build websites that look great and perform even better across all devices.</p>
-          </div>
+          <!-- Big Black Container: Dedicated exclusively to the Network Architecture Graphs (60% Width) -->
+          <div class="services-graph-container" id="services-graph-container">
 
-          <div class="service-card fade-in fade-in--delay-1" id="service-mobile">
-            <div class="service-card__icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                <line x1="12" y1="18" x2="12.01" y2="18"/>
-              </svg>
-            </div>
-            <h3 class="service-card__title">Mobile App Development</h3>
-            <p class="service-card__desc">Cross-Platform. Native Performance. iOS and Android apps that users love to use and businesses rely on.</p>
-          </div>
+            <!-- Visual Technology Network Graph (Only Graphs inside Big Black Container) -->
+            <div class="master-platform__visual">
+              <div class="master-platform__dots" aria-hidden="true"></div>
+              <div class="master-platform__vignette" aria-hidden="true"></div>
 
-          <div class="service-card fade-in fade-in--delay-2" id="service-fullstack">
-            <div class="service-card__icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+              <svg class="master-platform__svg" id="master-platform-svg" fill="none" xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true">
+                <!-- Dynamically populated with pixel-perfect circuit traces and traveling beams -->
               </svg>
-            </div>
-            <h3 class="service-card__title">Full Stack Development</h3>
-            <p class="service-card__desc">Scalable. Secure. Future Ready. End-to-end web applications built with clean architecture and solid backends.</p>
-          </div>
 
-          <div class="service-card fade-in fade-in--delay-3" id="service-deployment">
-            <div class="service-card__icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
-                <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-              </svg>
+              <!-- Center Core Hub Node (Eternity) -->
+              <div class="integration-card__hub" aria-label="Eternity Hub">
+                <div class="integration-card__hub-inner">
+                  <div class="hub-circle">
+                    <span class="hub-text">eternity</span>
+                  </div>
+                </div>
+                <div class="integration-card__hub-pulse" aria-hidden="true"></div>
+              </div>
+
+              <!-- ================= PRIMARY ARCHITECTURE HUBS ================= -->
+
+              <!-- 1. Next.js 15 (Web & SSR Platform) -->
+              <div class="integration-card__node" data-node="nextjs" style="left: 68%; top: 28%;"
+                title="Next.js (Web Application Framework)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M11.5 2C6.25 2 2 6.25 2 11.5S6.25 21 11.5 21c2.19 0 4.21-.74 5.82-2l-7.7-10.05v7.68H8.1V7.37h1.41l7.85 10.36c1.33-1.63 2.14-3.72 2.14-6.23C19.5 6.25 15.25 2 11.5 2Zm3.4 9.87h1.52V7.37H14.9v4.5Z" />
+                </svg>
+                <span class="node-label">Next.js</span>
+              </div>
+
+              <!-- 2. React 19 (UI Ecosystem) -->
+              <div class="integration-card__node" data-node="react" style="left: 70%; top: 50%;"
+                title="React (UI Ecosystem & State)">
+                <svg class="integration-card__icon" viewBox="-11.5 -10.23 23 20.46" fill="none" stroke="currentColor"
+                  stroke-width="1.3">
+                  <circle cx="0" cy="0" r="2" fill="currentColor" stroke="none" />
+                  <ellipse rx="11" ry="4.2" />
+                  <ellipse rx="11" ry="4.2" transform="rotate(60)" />
+                  <ellipse rx="11" ry="4.2" transform="rotate(120)" />
+                </svg>
+                <span class="node-label">React</span>
+              </div>
+
+              <!-- 3. React Native (Cross-Platform Mobile) -->
+              <div class="integration-card__node" data-node="react-native" style="left: 68%; top: 72%;"
+                title="React Native (Mobile Engine)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.5">
+                  <rect x="5" y="2" width="14" height="20" rx="3" stroke-width="1.6" />
+                  <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+                  <ellipse cx="12" cy="12" rx="4.5" ry="1.8" stroke-width="1" />
+                  <ellipse cx="12" cy="12" rx="4.5" ry="1.8" stroke-width="1" transform="rotate(60 12 12)" />
+                  <ellipse cx="12" cy="12" rx="4.5" ry="1.8" stroke-width="1" transform="rotate(120 12 12)" />
+                </svg>
+                <span class="node-label">React Native</span>
+              </div>
+
+              <!-- 4. Firebase (Serverless & Realtime Cloud) -->
+              <div class="integration-card__node" data-node="firebase" style="left: 50%; top: 80%;"
+                title="Firebase (Cloud & Realtime Backend)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M4.36 18.45 6.9 3.3a.7.7 0 0 1 1.28-.15l2.85 5.4-6.67 9.9Zm7.5-6.15-2.03-3.83-5.47 10 7.5-6.17Zm-.68 7.37-6.82-3.67 6.82 3.67Zm8.46-1.22L16.5 4.7a.7.7 0 0 0-1.2-.3L3.82 18.45l8.18 4.65a1.5 1.5 0 0 0 1.48 0l6.16-4.65Z" />
+                </svg>
+                <span class="node-label">Firebase</span>
+              </div>
+
+              <!-- 5. Supabase (Postgres & Auth Platform) -->
+              <div class="integration-card__node" data-node="supabase" style="left: 32%; top: 72%;"
+                title="Supabase (Database & Realtime)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M13.05 2.4c-.5-.7-1.6-.3-1.6.6v8.4H3.82c-1 0-1.5 1.2-.8 1.8l9.13 10c.5.7 1.6.3 1.6-.6v-8.4h7.63c1 0 1.5-1.2.8-1.8l-9.13-10Z" />
+                </svg>
+                <span class="node-label">Supabase</span>
+              </div>
+
+              <!-- 6. Node.js (High-Throughput Runtime) -->
+              <div class="integration-card__node" data-node="nodejs" style="left: 30%; top: 50%;"
+                title="Node.js (Backend Microservices)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2 3.5 7v10L12 22l8.5-5V7L12 2Z" />
+                  <path d="M9 15V9l6 6V9" stroke-width="2" />
+                </svg>
+                <span class="node-label">Node.js</span>
+              </div>
+
+              <!-- 7. Figma (Product Design Architecture) -->
+              <div class="integration-card__node" data-node="figma" style="left: 32%; top: 28%;"
+                title="Figma (Design System & Prototyping)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M12 12a3 3 0 1 1 6 0 3 3 0 0 1-6 0Zm-6 6a3 3 0 0 1 3-3h3v3a3 3 0 1 1-6 0Zm0-6a3 3 0 0 1 3-3h3v6H9a3 3 0 0 1-3-3Zm0-6a3 3 0 0 1 3-3h3v6H9a3 3 0 0 1-3-3Zm6-3h3a3 3 0 1 1 0 6h-3V3Z" />
+                </svg>
+                <span class="node-label">Figma</span>
+              </div>
+
+              <!-- 8. Cloudflare (Edge Network & Workers) -->
+              <div class="integration-card__node" data-node="cloudflare" style="left: 38%; top: 18%;"
+                title="Cloudflare (Edge Compute & CDN)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18.8 9.2A6.5 6.5 0 0 0 6.6 8a5 5 0 0 0-4.6 5 5 5 0 0 0 5 5h11.8a4.5 4.5 0 0 0 0-9h-.02Z" />
+                </svg>
+                <span class="node-label">Cloudflare</span>
+              </div>
+
+              <!-- 9. OpenAI (Generative AI Engine) -->
+              <div class="integration-card__node" data-node="openai" style="left: 62%; top: 18%;"
+                title="OpenAI (AI Engine & Embeddings)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path
+                    d="M12 2a4 4 0 0 1 3.5 2.1l4 6.9A4 4 0 0 1 18 16.5l-4 6.9A4 4 0 0 1 8.5 22l-4-6.9a4 4 0 0 1 1.5-5.5l4-6.9A4 4 0 0 1 12 2Z" />
+                  <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" />
+                </svg>
+                <span class="node-label">OpenAI</span>
+              </div>
+
+              <!-- ================= SPECIALIZED BRANCH NODES ================= -->
+
+              <!-- Next.js Sub-branch A: TypeScript -->
+              <div class="integration-card__node integration-card__node--branch" data-node="typescript"
+                style="left: 88%; top: 22%;" title="TypeScript (Strict Type Safety)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="2" y="2" width="20" height="20" rx="3" fill="none" stroke="currentColor"
+                    stroke-width="1.6" />
+                  <path
+                    d="M6 7.5h6m-3 0v9M13.5 13.5c.8.8 2 .8 2.8 0 .4-.4.4-1.2 0-1.6-.7-.7-2.3-.5-2.8-1.4-.4-.7-.2-1.7.5-2.2 1.3-.9 3-.4 3.5.5"
+                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none" />
+                </svg>
+                <span class="node-label">TS</span>
+              </div>
+
+              <!-- Next.js Sub-branch B: Tailwind CSS -->
+              <div class="integration-card__node integration-card__node--branch" data-node="tailwind"
+                style="left: 88%; top: 34%;" title="Tailwind CSS (Utility Design Engine)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M12 6c-2.4 0-3.9 1.2-4.5 3.6 1-.8 2.1-1.1 3.3-.8.7.2 1.2.7 1.8 1.2 1 1 2.2 2 4.4 2 2.4 0 3.9-1.2 4.5-3.6-1 .8-2.1 1.1-3.3.8-.7-.2-1.2-.7-1.8-1.2-1-1-2.2-2-4.4-2Zm-7 6c-2.4 0-3.9 1.2-4.5 3.6 1-.8 2.1-1.1 3.3-.8.7.2 1.2.7 1.8 1.2 1 1 2.2 2 4.4 2 2.4 0 3.9-1.2 4.5-3.6-1 .8-2.1 1.1-3.3.8-.7-.2-1.2-.7-1.8-1.2-1-1-2.2-2-4.4-2Z" />
+                </svg>
+                <span class="node-label">Tailwind</span>
+              </div>
+
+              <!-- React Sub-branch C: TanStack Query -->
+              <div class="integration-card__node integration-card__node--branch" data-node="tanstack"
+                style="left: 88%; top: 44%;" title="TanStack Query (Async State & Cache)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l6.73-6.19" />
+                </svg>
+                <span class="node-label">TanStack</span>
+              </div>
+
+              <!-- React Sub-branch D: Three.js / WebGL -->
+              <div class="integration-card__node integration-card__node--branch" data-node="threejs"
+                style="left: 88%; top: 56%;" title="Three.js & WebGL (3D Interactive Canvas)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path
+                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                  <line x1="12" y1="22.08" x2="12" y2="12" />
+                </svg>
+                <span class="node-label">Three.js</span>
+              </div>
+
+              <!-- React Native Sub-branch E: Expo EAS -->
+              <div class="integration-card__node integration-card__node--branch" data-node="expo"
+                style="left: 88%; top: 66%;" title="Expo (EAS & Cross-Platform Native Compilation)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="m12 3 9.5 16.5H2.5L12 3Zm0 5.2L6.2 17.5h11.6L12 8.2Z" />
+                </svg>
+                <span class="node-label">Expo</span>
+              </div>
+
+              <!-- React Native Sub-branch F: iOS & Android SDK -->
+              <div class="integration-card__node integration-card__node--branch" data-node="native-sdk"
+                style="left: 88%; top: 78%;" title="Native iOS & Android SDK Compilation">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="2" width="16" height="20" rx="2" />
+                  <path d="M9 6h6M12 18h.01" />
+                </svg>
+                <span class="node-label">Native SDK</span>
+              </div>
+
+              <!-- Firebase Sub-branch G: AWS Cloud Infrastructure -->
+              <div class="integration-card__node integration-card__node--branch" data-node="aws"
+                style="left: 36%; top: 92%;" title="AWS (S3, EC2 & Global Cloud)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+                  <path d="m8 16 4 4 4-4" />
+                </svg>
+                <span class="node-label">AWS</span>
+              </div>
+
+              <!-- Firebase Sub-branch H: GraphQL API -->
+              <div class="integration-card__node integration-card__node--branch" data-node="graphql"
+                style="left: 64%; top: 92%;" title="GraphQL (Unified Declarative Query Schema)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="m12 2 8.66 5v10L12 22l-8.66-5V7L12 2Zm0 3.3L5.34 8.7v6.6L12 18.7l6.66-3.4V8.7L12 5.3Z" />
+                </svg>
+                <span class="node-label">GraphQL</span>
+              </div>
+
+              <!-- Supabase Sub-branch I: PostgreSQL -->
+              <div class="integration-card__node integration-card__node--branch" data-node="postgres"
+                style="left: 12%; top: 66%;" title="PostgreSQL (Relational Enterprise ACID Database)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <ellipse cx="12" cy="5" rx="9" ry="3" />
+                  <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                  <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                </svg>
+                <span class="node-label">PostgreSQL</span>
+              </div>
+
+              <!-- Supabase Sub-branch J: Prisma ORM -->
+              <div class="integration-card__node integration-card__node--branch" data-node="prisma"
+                style="left: 12%; top: 78%;" title="Prisma ORM (Next-Generation Type-Safe ORM)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 2 22 22 22 12 2" />
+                  <line x1="12" y1="2" x2="12" y2="22" />
+                </svg>
+                <span class="node-label">Prisma</span>
+              </div>
+
+              <!-- Node.js Sub-branch K: Docker Containers -->
+              <div class="integration-card__node integration-card__node--branch" data-node="docker"
+                style="left: 12%; top: 44%;" title="Docker (Container Orchestration & Microservices)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 13h20c-.5 4-4 7-9 7s-8.5-3-9-7Z" />
+                  <rect x="5" y="7" width="3" height="3" />
+                  <rect x="10" y="7" width="3" height="3" />
+                  <rect x="15" y="7" width="3" height="3" />
+                  <rect x="10" y="3" width="3" height="3" />
+                </svg>
+                <span class="node-label">Docker</span>
+              </div>
+
+              <!-- Node.js Sub-branch L: Redis Cache -->
+              <div class="integration-card__node integration-card__node--branch" data-node="redis"
+                style="left: 12%; top: 56%;" title="Redis (In-Memory Key-Value Caching & Queues)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 22 8.5 12 15 2 8.5 12 2" />
+                  <polyline points="2 12 12 18.5 22 12" />
+                  <polyline points="2 15.5 12 22 22 15.5" />
+                </svg>
+                <span class="node-label">Redis</span>
+              </div>
+
+              <!-- Figma Sub-branch M1: Storybook -->
+              <div class="integration-card__node integration-card__node--branch" data-node="storybook"
+                style="left: 12%; top: 22%;" title="Storybook (Isolated UI Component Architecture)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                  <path d="M10 8h4M10 12h2" />
+                </svg>
+                <span class="node-label">Storybook</span>
+              </div>
+
+              <!-- Figma Sub-branch M2: Vite -->
+              <div class="integration-card__node integration-card__node--branch" data-node="vite"
+                style="left: 12%; top: 34%;" title="Vite (High-Performance Next-Gen Build Engine)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 2 7 12 22 22 7 12 2" />
+                  <polygon points="12 6 7 13 12 13 11 18 17 11 12 11 12 6" fill="currentColor" />
+                </svg>
+                <span class="node-label">Vite</span>
+              </div>
+
+              <!-- Cloudflare Sub-branch N: GitHub Actions -->
+              <div class="integration-card__node integration-card__node--branch" data-node="github-actions"
+                style="left: 24%; top: 10%;" title="GitHub Actions (Automated CI/CD Workflows)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="6" cy="6" r="3" />
+                  <circle cx="6" cy="18" r="3" />
+                  <circle cx="18" cy="12" r="3" />
+                  <path d="M6 9v6M9 6h4a5 5 0 0 1 5 5" />
+                </svg>
+                <span class="node-label">CI/CD</span>
+              </div>
+
+              <!-- OpenAI Sub-branch O: Python & Vector AI -->
+              <div class="integration-card__node integration-card__node--branch" data-node="python"
+                style="left: 76%; top: 10%;" title="Python & Vector Embeddings (AI RAG Pipelines)">
+                <svg class="integration-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+                <span class="node-label">Python AI</span>
+              </div>
             </div>
-            <h3 class="service-card__title">Deployment & Maintenance</h3>
-            <p class="service-card__desc">Smooth Deployment. Continuous Support. We don't just build — we launch, monitor, and maintain your product.</p>
           </div>
+          <!-- End Big Black Container (Only Graphs) -->
+
+          <!-- Standalone Services Component: Placed on White Background Outside the Big Black Container (30% Width) -->
+          <div class="services-cards-container" id="services-cards-container">
+
+            <!-- 4 Services Stack on White Background -->
+            <div class="master-platform__services-side" id="master-services-side" role="tablist"
+              aria-label="Services Platform Ecosystem">
+
+              <!-- 01. Web Apps -->
+              <div class="master-service-side-card master-service-card is-expanded" id="service-web" data-service="web"
+                role="tab" tabindex="0" aria-expanded="true">
+                <div class="service-side-card__header">
+                  <div class="service-side-card__lead">
+                    <span class="service-side-num font-mono">01</span>
+                    <div class="service-side-icon">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="2" y1="12" x2="22" y2="12" />
+                        <path
+                          d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                      </svg>
+                    </div>
+                    <h3 class="service-side-title">Web Apps</h3>
+                  </div>
+                  <div class="service-side-meta">
+                    <span class="service-side-chevron" aria-hidden="true">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+                <div class="service-side-card__content">
+                  <p class="service-side-desc">High-performance web applications, portals, and platforms engineered for
+                    sub-second Core Web Vitals, modular design systems, and realtime interactivity.</p>
+                  <div class="service-side-tags">
+                    <span class="tech-pill">Next.js 15</span>
+                    <span class="tech-pill">React 19</span>
+                    <span class="tech-pill">TypeScript</span>
+                    <span class="tech-pill">Tailwind CSS</span>
+                    <span class="tech-pill">Three.js / WebGL</span>
+                    <span class="tech-pill">TanStack Query</span>
+                    <span class="tech-pill">Vite</span>
+                    <span class="tech-pill">Storybook</span>
+                    <span class="tech-pill">Figma Systems</span>
+                    <span class="tech-pill">Cloudflare Workers</span>
+                    <span class="tech-pill">GraphQL &amp; REST</span>
+                    <span class="tech-pill">WebAssembly</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 02. Mobile Apps -->
+              <div class="master-service-side-card master-service-card" id="service-mobile" data-service="mobile"
+                role="tab" tabindex="0" aria-expanded="false">
+                <div class="service-side-card__header">
+                  <div class="service-side-card__lead">
+                    <span class="service-side-num font-mono">02</span>
+                    <div class="service-side-icon">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                        <line x1="12" y1="18" x2="12.01" y2="18" />
+                      </svg>
+                    </div>
+                    <h3 class="service-side-title">Mobile Apps</h3>
+                  </div>
+                  <div class="service-side-meta">
+                    <span class="service-side-chevron" aria-hidden="true">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+                <div class="service-side-card__content">
+                  <p class="service-side-desc">Cross-platform iOS and Android applications crafted for 120fps fluid
+                    gestures, offline-first data sync, and automated App Store &amp; Play Store compilation.</p>
+                  <div class="service-side-tags">
+                    <span class="tech-pill">React Native</span>
+                    <span class="tech-pill">Expo EAS</span>
+                    <span class="tech-pill">iOS (Swift)</span>
+                    <span class="tech-pill">Android (Kotlin)</span>
+                    <span class="tech-pill">Offline Sync</span>
+                    <span class="tech-pill">WatermelonDB</span>
+                    <span class="tech-pill">Push Notifications</span>
+                    <span class="tech-pill">Firebase SDK</span>
+                    <span class="tech-pill">Biometrics &amp; BLE</span>
+                    <span class="tech-pill">Native Device APIs</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 03. Full Stack -->
+              <div class="master-service-side-card master-service-card" id="service-fullstack" data-service="fullstack"
+                role="tab" tabindex="0" aria-expanded="false">
+                <div class="service-side-card__header">
+                  <div class="service-side-card__lead">
+                    <span class="service-side-num font-mono">03</span>
+                    <div class="service-side-icon">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="16 18 22 12 16 6" />
+                        <polyline points="8 6 2 12 8 18" />
+                      </svg>
+                    </div>
+                    <h3 class="service-side-title">Full Stack</h3>
+                  </div>
+                  <div class="service-side-meta">
+                    <span class="service-side-chevron" aria-hidden="true">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+                <div class="service-side-card__content">
+                  <p class="service-side-desc">Distributed backend architecture, AI vector pipelines, microservices, and
+                    ACID-compliant relational schemas built for horizontal scaling and zero data loss.</p>
+                  <div class="service-side-tags">
+                    <span class="tech-pill">Node.js</span>
+                    <span class="tech-pill">Python (FastAPI)</span>
+                    <span class="tech-pill">PostgreSQL</span>
+                    <span class="tech-pill">Supabase</span>
+                    <span class="tech-pill">Redis Cache</span>
+                    <span class="tech-pill">Docker</span>
+                    <span class="tech-pill">Prisma ORM</span>
+                    <span class="tech-pill">GraphQL &amp; REST</span>
+                    <span class="tech-pill">OpenAI &amp; RAG</span>
+                    <span class="tech-pill">pgvector</span>
+                    <span class="tech-pill">WebSockets</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 04. DevOps & Cloud -->
+              <div class="master-service-side-card master-service-card" id="service-deployment"
+                data-service="deployment" role="tab" tabindex="0" aria-expanded="false">
+                <div class="service-side-card__header">
+                  <div class="service-side-card__lead">
+                    <span class="service-side-num font-mono">04</span>
+                    <div class="service-side-icon">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="16 16 12 12 8 16" />
+                        <line x1="12" y1="12" x2="12" y2="21" />
+                        <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+                      </svg>
+                    </div>
+                    <h3 class="service-side-title">DevOps &amp; Cloud</h3>
+                  </div>
+                  <div class="service-side-meta">
+                    <span class="service-side-chevron" aria-hidden="true">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+                <div class="service-side-card__content">
+                  <p class="service-side-desc">Automated CI/CD pipelines, container orchestration, edge caching, and
+                    24/7 telemetry monitoring ensuring your applications run with 99.99% uptime and resilience.</p>
+                  <div class="service-side-tags">
+                    <span class="tech-pill">AWS (S3, EC2, Lambda)</span>
+                    <span class="tech-pill">Cloudflare Edge</span>
+                    <span class="tech-pill">Docker</span>
+                    <span class="tech-pill">Kubernetes</span>
+                    <span class="tech-pill">GitHub Actions CI/CD</span>
+                    <span class="tech-pill">Terraform</span>
+                    <span class="tech-pill">Zero-Downtime Blue/Green</span>
+                    <span class="tech-pill">Datadog &amp; Sentry</span>
+                    <span class="tech-pill">DDoS &amp; WAF Shield</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            <!-- End Right Services Side -->
+
+          </div>
+          <!-- End Standalone Services Component -->
 
         </div>
+        <!-- End Services Dual Layout -->
+
+
+
       </div>
     </section>
 
-    <!-- ========== WHO WE WORK WITH ========== -->
-    <section class="trust-section" id="work">
-      <div class="trust-businesses">
-        <div class="container">
-          <div class="section-header fade-in">
-            <span class="section-label section-label--dark">Trusted by Businesses of All Sizes</span>
-            <h2 class="section-heading section-heading--dark">Built for Every Stage of Business</h2>
-          </div>
-          <div class="business-types fade-in">
-            <div class="business-type">
-              <span class="business-type__icon">🚀</span>
-              <span class="business-type__label">Startups</span>
-            </div>
-            <div class="business-type">
-              <span class="business-type__icon">🏢</span>
-              <span class="business-type__label">Enterprises</span>
-            </div>
-            <div class="business-type">
-              <span class="business-type__icon">🏬</span>
-              <span class="business-type__label">Agencies</span>
-            </div>
-            <div class="business-type">
-              <span class="business-type__icon">🛒</span>
-              <span class="business-type__label">E-commerce</span>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div class="tech-stack-strip">
-        <div class="container">
-          <span class="section-label section-label--dark tech-stack-label">We Work with Modern Technologies</span>
-          <div class="tech-logos fade-in">
-            <span class="tech-logo">React</span>
-            <span class="tech-logo">Next.js</span>
-            <span class="tech-logo">Node.js</span>
-            <span class="tech-logo">Flutter</span>
-            <span class="tech-logo">React Native</span>
-            <span class="tech-logo">AWS</span>
-            <span class="tech-logo">Docker</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========== PROCESS SECTION ========== -->
+    <!-- ========== PROCESS SECTION (MINIMAL ARCHITECTURAL TIMELINE) ========== -->
     <section class="process" id="about">
       <div class="container">
+        <!-- Minimal Section Header -->
         <div class="section-header fade-in">
           <span class="section-label">How We Work</span>
-          <h2 class="section-heading">A Simple Process.<br />A Strong Result.</h2>
+          <h2 class="section-heading">A Simple Process. <br />A Strong Result.</h2>
         </div>
 
-        <div class="process-steps">
-
-          <div class="process-step fade-in" id="step-discover">
-            <div class="process-step__number">01</div>
-            <div class="process-step__content">
-              <h3 class="process-step__title">Discover</h3>
-              <p class="process-step__desc">Understanding your goals, audience, and requirements through focused discovery sessions.</p>
-            </div>
+        <!-- Minimal Interactive Timeline -->
+        <div class="process-timeline fade-in">
+          <!-- Animated Laser Guide Rail (Desktop) -->
+          <div class="process-rail" aria-hidden="true">
+            <div class="process-rail-line"></div>
+            <div class="process-rail-beam"></div>
           </div>
 
-          <div class="process-connector" aria-hidden="true"></div>
+          <!-- 4 Clean Editorial Columns -->
+          <div class="process-grid">
 
-          <div class="process-step fade-in fade-in--delay-1" id="step-design">
-            <div class="process-step__number">02</div>
-            <div class="process-step__content">
-              <h3 class="process-step__title">Design</h3>
-              <p class="process-step__desc">Crafting intuitive and engaging user experiences that align with your brand and user needs.</p>
+            <div class="process-col is-active" data-step="1">
+              <div class="process-node">
+                <span class="process-dot"></span>
+              </div>
+              <div class="process-num">01</div>
+              <h3 class="process-title">Discover</h3>
+              <p class="process-desc">Understanding your goals, audience, and requirements through focused discovery
+                sessions.</p>
             </div>
+
+            <div class="process-col" data-step="2">
+              <div class="process-node">
+                <span class="process-dot"></span>
+              </div>
+              <div class="process-num">02</div>
+              <h3 class="process-title">Design</h3>
+              <p class="process-desc">Crafting intuitive and engaging user experiences that align with your brand and
+                user needs.</p>
+            </div>
+
+            <div class="process-col" data-step="3">
+              <div class="process-node">
+                <span class="process-dot"></span>
+              </div>
+              <div class="process-num">03</div>
+              <h3 class="process-title">Develop</h3>
+              <p class="process-desc">Building scalable and secure digital solutions with clean architecture and best
+                practices.</p>
+            </div>
+
+            <div class="process-col" data-step="4">
+              <div class="process-node">
+                <span class="process-dot"></span>
+              </div>
+              <div class="process-num">04</div>
+              <h3 class="process-title">Deploy</h3>
+              <p class="process-desc">Smooth launch with full post-deployment support, monitoring, and continuous
+                improvement.</p>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== CLIENT REVIEWS SECTION (3D MARQUEE) ========== -->
+    <section class="testimonials-section" id="reviews">
+      <a id="testimonials" class="sr-only"></a>
+      <div class="testimonials-compact-container">
+        <div class="testimonials-header-flex fade-in">
+          <div class="testimonials-sphere-container" aria-label="Interactive 3D Client Avatar Sphere">
+            <div id="sphere-image-grid-root" class="sphere-image-grid-wrap"></div>
+          </div>
+          <div class="testimonials-header-left">
+            <div class="testimonials-label-row">
+              <span class="section-label">Enterprise Reviews // Verified</span>
+            </div>
+            <h2 class="section-heading">Client Reviews</h2>
+            <p class="section-subtext">Real-world outcomes from CTOs, product leaders, and founders scaling with
+              Eternity.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3D Marquee Stage with Gradient Fade Overlays (Full-Bleed Viewport Span) -->
+      <div class="testimonials-stage-wrap">
+        <div class="testimonials-stage">
+
+          <!-- 3D Perspective Marquee Grid -->
+          <div class="marquee-3d-grid" id="testimonials-3d-grid">
+
+            <!-- Column 1: Down -->
+            <div class="marquee-col" data-column="1" aria-label="Client testimonials column 1">
+              <div class="marquee-track">
+                <div class="marquee-group">
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/55/55cf6231499bcdc496f15ff1d28d4170ac9b99e9279495caa44fca70886d8b2e.jpg"
+                          alt="Ava Green" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">AG</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Ava Green <span class="testimonial-country">🇦🇺 Australia</span>
+                        </div>
+                        <span class="testimonial-username">VP of Engineering · PulseHealth</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Eternity rebuilt our enterprise patient portal from scratch using Next.js. Page loads dropped
+                      below 300ms, and patient engagement jumped 38% across our health network.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/f0/f07b84f12ef125cbb837a7bd64da401992f5f62bd55fee10d01cd3dcc8abae80.jpg"
+                          alt="Ana Miller" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">AM</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Ana Miller <span class="testimonial-country">🇩🇪 Germany</span>
+                        </div>
+                        <span class="testimonial-username">Chief Architect · MedTech Solutions</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Their architectural discipline is unmatched. Delivered our HIPAA and GDPR-compliant healthcare
+                      portal with zero vulnerabilities across third-party penetration audits.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/7c/7c0d2aa99715b15c218385f5679347782843c02f939d8eee6f9cb1cad6ba6ed0.jpg"
+                          alt="Mateo Rossi" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">MR</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Mateo Rossi <span class="testimonial-country">🇮🇹 Italy</span>
+                        </div>
+                        <span class="testimonial-username">Head of Data · Omnia Telemetry</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Eternity architected our real-time analytics pipeline using Node, Redis, and ClickHouse. It
+                      handles 50M events daily with sub-millisecond response times.
+                    </blockquote>
+                  </div>
+                </div>
+                <!-- Duplicate group for seamless infinite vertical loop -->
+                <div class="marquee-group" aria-hidden="true">
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/55/55cf6231499bcdc496f15ff1d28d4170ac9b99e9279495caa44fca70886d8b2e.jpg"
+                          alt="Ava Green" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">AG</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Ava Green <span class="testimonial-country">🇦🇺 Australia</span>
+                        </div>
+                        <span class="testimonial-username">VP of Engineering · PulseHealth</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Eternity rebuilt our enterprise patient portal from scratch using Next.js. Page loads dropped
+                      below 300ms, and patient engagement jumped 38% across our health network.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/f0/f07b84f12ef125cbb837a7bd64da401992f5f62bd55fee10d01cd3dcc8abae80.jpg"
+                          alt="Ana Miller" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">AM</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Ana Miller <span class="testimonial-country">🇩🇪 Germany</span>
+                        </div>
+                        <span class="testimonial-username">Chief Architect · MedTech Solutions</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Their architectural discipline is unmatched. Delivered our HIPAA and GDPR-compliant healthcare
+                      portal with zero vulnerabilities across third-party penetration audits.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/7c/7c0d2aa99715b15c218385f5679347782843c02f939d8eee6f9cb1cad6ba6ed0.jpg"
+                          alt="Mateo Rossi" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">MR</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Mateo Rossi <span class="testimonial-country">🇮🇹 Italy</span>
+                        </div>
+                        <span class="testimonial-username">Head of Data · Omnia Telemetry</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Eternity architected our real-time analytics pipeline using Node, Redis, and ClickHouse. It
+                      handles 50M events daily with sub-millisecond response times.
+                    </blockquote>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column 2: Up (Reverse) -->
+            <div class="marquee-col marquee-col--reverse" data-column="2" aria-label="Client testimonials column 2">
+              <div class="marquee-track">
+                <div class="marquee-group">
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/f8/f8f2ddc445b6b2318430260bdebb665c9415865827230565aa42f57c9c794baf.jpg"
+                          alt="Maya Patel" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">MP</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Maya Patel <span class="testimonial-country">🇮🇳 India</span>
+                        </div>
+                        <span class="testimonial-username">Director of Technology · CloudPulse</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      From technical discovery to cloud rollout, Eternity integrated seamlessly with our internal tech
+                      leads and delivered our multi-tenant SaaS suite two sprints ahead of schedule.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/ae/ae1d49872fdd6f8d9aa933f6ca8bce8cb1ba7e87dfb9d2926661184cb7bfe26d.jpg"
+                          alt="Noah Smith" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">NS</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Noah Smith <span class="testimonial-country">🇺🇸 USA</span></div>
+                        <span class="testimonial-username">CTO · FinEdge Global</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Eternity shipped our iOS and Android mobile apps in React Native. The 120fps fluid gestures,
+                      offline transaction sync, and biometric security feel completely native to our 200k users.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/9a/9aac54d62e727561f6958213b8a3649230a3bba61ba5ddf63c69d3c6e4aecb0a.jpg"
+                          alt="Lucas Stone" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">LS</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Lucas Stone <span class="testimonial-country">🇫🇷 France</span>
+                        </div>
+                        <span class="testimonial-username">Product Design Lead · Forma</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      They designed and engineered our entire design system in Figma and Storybook. Our cross-functional
+                      frontend teams now ship production features twice as fast.
+                    </blockquote>
+                  </div>
+                </div>
+                <!-- Duplicate group for seamless infinite vertical loop -->
+                <div class="marquee-group" aria-hidden="true">
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/f8/f8f2ddc445b6b2318430260bdebb665c9415865827230565aa42f57c9c794baf.jpg"
+                          alt="Maya Patel" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">MP</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Maya Patel <span class="testimonial-country">🇮🇳 India</span>
+                        </div>
+                        <span class="testimonial-username">Director of Technology · CloudPulse</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      From technical discovery to cloud rollout, Eternity integrated seamlessly with our internal tech
+                      leads and delivered our multi-tenant SaaS suite two sprints ahead of schedule.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/ae/ae1d49872fdd6f8d9aa933f6ca8bce8cb1ba7e87dfb9d2926661184cb7bfe26d.jpg"
+                          alt="Noah Smith" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">NS</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Noah Smith <span class="testimonial-country">🇺🇸 USA</span></div>
+                        <span class="testimonial-username">CTO · FinEdge Global</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Eternity shipped our iOS and Android mobile apps in React Native. The 120fps fluid gestures,
+                      offline transaction sync, and biometric security feel completely native to our 200k users.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/9a/9aac54d62e727561f6958213b8a3649230a3bba61ba5ddf63c69d3c6e4aecb0a.jpg"
+                          alt="Lucas Stone" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">LS</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Lucas Stone <span class="testimonial-country">🇫🇷 France</span>
+                        </div>
+                        <span class="testimonial-username">Product Design Lead · Forma</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      They designed and engineered our entire design system in Figma and Storybook. Our cross-functional
+                      frontend teams now ship production features twice as fast.
+                    </blockquote>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column 3: Down -->
+            <div class="marquee-col" data-column="3" aria-label="Client testimonials column 3">
+              <div class="marquee-track">
+                <div class="marquee-group">
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/e5/e55f3cdab57eb4084f7006cfe9f7f047e638e1b257a53498aaed14b83087152a.jpg"
+                          alt="Haruto Sato" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">HS</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Haruto Sato <span class="testimonial-country">🇯🇵 Japan</span>
+                        </div>
+                        <span class="testimonial-username">VP of Platform · OmniRetail Global</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Our e-commerce checkout latency dropped by 65% after Eternity refactored our legacy monolith into
+                      scalable microservices. Checkout conversion surged by 28%.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/03/03410c155320ba33ecb8d798807c6c9610f33b2b2acdd4ed961a68185806df79.jpg"
+                          alt="Emma Lee" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">EL</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Emma Lee <span class="testimonial-country">🇨🇦 Canada</span>
+                        </div>
+                        <span class="testimonial-username">Head of Engineering · Apex Banking</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Eternity turned our complex financial workflows into a secure, bank-grade web platform with
+                      ACID-compliant transactions and 95% automated test coverage.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/b5/b58616f0d669595c9a42d60a0b9803364c9859f1c3db93a5e3dc408b603e03e8.jpg"
+                          alt="Carlos Ray" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">CR</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Carlos Ray <span class="testimonial-country">🇪🇸 Spain</span>
+                        </div>
+                        <span class="testimonial-username">VP Infrastructure · NextGen Media</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Flawless cloud infrastructure overhaul. Their AWS and Kubernetes architecture migration achieved
+                      zero downtime and immediately slashed our monthly cloud bill by 48%.
+                    </blockquote>
+                  </div>
+                </div>
+                <!-- Duplicate group for seamless infinite vertical loop -->
+                <div class="marquee-group" aria-hidden="true">
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/e5/e55f3cdab57eb4084f7006cfe9f7f047e638e1b257a53498aaed14b83087152a.jpg"
+                          alt="Haruto Sato" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">HS</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Haruto Sato <span class="testimonial-country">🇯🇵 Japan</span>
+                        </div>
+                        <span class="testimonial-username">VP of Platform · OmniRetail Global</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Our e-commerce checkout latency dropped by 65% after Eternity refactored our legacy monolith into
+                      scalable microservices. Checkout conversion surged by 28%.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/03/03410c155320ba33ecb8d798807c6c9610f33b2b2acdd4ed961a68185806df79.jpg"
+                          alt="Emma Lee" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">EL</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Emma Lee <span class="testimonial-country">🇨🇦 Canada</span>
+                        </div>
+                        <span class="testimonial-username">Head of Engineering · Apex Banking</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Eternity turned our complex financial workflows into a secure, bank-grade web platform with
+                      ACID-compliant transactions and 95% automated test coverage.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/b5/b58616f0d669595c9a42d60a0b9803364c9859f1c3db93a5e3dc408b603e03e8.jpg"
+                          alt="Carlos Ray" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">CR</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Carlos Ray <span class="testimonial-country">🇪🇸 Spain</span>
+                        </div>
+                        <span class="testimonial-username">VP Infrastructure · NextGen Media</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Flawless cloud infrastructure overhaul. Their AWS and Kubernetes architecture migration achieved
+                      zero downtime and immediately slashed our monthly cloud bill by 48%.
+                    </blockquote>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column 4: Up (Reverse) -->
+            <div class="marquee-col marquee-col--reverse" data-column="4" aria-label="Client testimonials column 4">
+              <div class="marquee-track">
+                <div class="marquee-group">
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/55/55cf6231499bcdc496f15ff1d28d4170ac9b99e9279495caa44fca70886d8b2e.jpg"
+                          alt="Sophia Chen" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">SC</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Sophia Chen <span class="testimonial-country">🇸🇬
+                            Singapore</span></div>
+                        <span class="testimonial-username">AI Engineering Lead · Synapse Neural</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Eternity delivered our AI workflow platform with pristine TypeScript architecture and real-time
+                      streaming LLM pipelines. Our enterprise customers love the response speed.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/ae/ae1d49872fdd6f8d9aa933f6ca8bce8cb1ba7e87dfb9d2926661184cb7bfe26d.jpg"
+                          alt="Liam Davies" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">LD</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Liam Davies <span class="testimonial-country">🇬🇧 UK</span></div>
+                        <span class="testimonial-username">Principal Architect · Vantage Systems</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      The highest engineering standards we have ever seen from an agency partner. Clean modular code,
+                      zero technical debt, and automated CI/CD pipelines that deploy with total confidence.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/03/03410c155320ba33ecb8d798807c6c9610f33b2b2acdd4ed961a68185806df79.jpg"
+                          alt="Chloe Dupont" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">CD</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Chloe Dupont <span class="testimonial-country">🇨🇭
+                            Switzerland</span></div>
+                        <span class="testimonial-username">Chief Digital Officer · Alpine Wealth</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      From architecture discovery to production cloud deployment, Eternity executed every sprint with
+                      Swiss watch precision, transparent reporting, and zero scope drift.
+                    </blockquote>
+                  </div>
+                </div>
+                <!-- Duplicate group for seamless infinite vertical loop -->
+                <div class="marquee-group" aria-hidden="true">
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/55/55cf6231499bcdc496f15ff1d28d4170ac9b99e9279495caa44fca70886d8b2e.jpg"
+                          alt="Sophia Chen" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">SC</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Sophia Chen <span class="testimonial-country">🇸🇬
+                            Singapore</span></div>
+                        <span class="testimonial-username">AI Engineering Lead · Synapse Neural</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Eternity delivered our AI workflow platform with pristine TypeScript architecture and real-time
+                      streaming LLM pipelines. Our enterprise customers love the response speed.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/ae/ae1d49872fdd6f8d9aa933f6ca8bce8cb1ba7e87dfb9d2926661184cb7bfe26d.jpg"
+                          alt="Liam Davies" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">LD</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Liam Davies <span class="testimonial-country">🇬🇧 UK</span></div>
+                        <span class="testimonial-username">Principal Architect · Vantage Systems</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      The highest engineering standards we have ever seen from an agency partner. Clean modular code,
+                      zero technical debt, and automated CI/CD pipelines that deploy with total confidence.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/03/03410c155320ba33ecb8d798807c6c9610f33b2b2acdd4ed961a68185806df79.jpg"
+                          alt="Chloe Dupont" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">CD</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Chloe Dupont <span class="testimonial-country">🇨🇭
+                            Switzerland</span></div>
+                        <span class="testimonial-username">Chief Digital Officer · Alpine Wealth</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      From architecture discovery to production cloud deployment, Eternity executed every sprint with
+                      Swiss watch precision, transparent reporting, and zero scope drift.
+                    </blockquote>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column 5: Down -->
+            <div class="marquee-col" data-column="5" aria-label="Client testimonials column 5">
+              <div class="marquee-track">
+                <div class="marquee-group">
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/9a/9aac54d62e727561f6958213b8a3649230a3bba61ba5ddf63c69d3c6e4aecb0a.jpg"
+                          alt="Oliver Brown" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">OB</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Oliver Brown <span class="testimonial-country">🇬🇧 UK</span>
+                        </div>
+                        <span class="testimonial-username">Head of Mobile · Velocity Freight</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      The mobile app Eternity built for our logistics fleet handles complex offline route caching and
+                      high-speed barcode scanning flawlessly across both iOS and Android.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/f8/f8f2ddc445b6b2318430260bdebb665c9415865827230565aa42f57c9c794baf.jpg"
+                          alt="Elena Rostova" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">ER</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Elena Rostova <span class="testimonial-country">🇨🇭
+                            Switzerland</span></div>
+                        <span class="testimonial-username">VP Product · Geneve Commerce</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Eternity modernized our multi-brand retail storefront using edge-rendered Next.js. Lighthouse
+                      performance scores rose to 98/100 and checkout abandonment fell by 34%.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/ae/ae1d49872fdd6f8d9aa933f6ca8bce8cb1ba7e87dfb9d2926661184cb7bfe26d.jpg"
+                          alt="Daniel Vance" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">DV</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Daniel Vance <span class="testimonial-country">🇺🇸 USA</span>
+                        </div>
+                        <span class="testimonial-username">CTO · Horizon Cloud SaaS</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Best technical partner we have hired in 10 years. Eternity re-architected our multi-tenant SaaS
+                      database tier to scale to 500k daily active users with 99.99% uptime.
+                    </blockquote>
+                  </div>
+                </div>
+                <!-- Duplicate group for seamless infinite vertical loop -->
+                <div class="marquee-group" aria-hidden="true">
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/9a/9aac54d62e727561f6958213b8a3649230a3bba61ba5ddf63c69d3c6e4aecb0a.jpg"
+                          alt="Oliver Brown" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">OB</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Oliver Brown <span class="testimonial-country">🇬🇧 UK</span>
+                        </div>
+                        <span class="testimonial-username">Head of Mobile · Velocity Freight</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      The mobile app Eternity built for our logistics fleet handles complex offline route caching and
+                      high-speed barcode scanning flawlessly across both iOS and Android.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/f8/f8f2ddc445b6b2318430260bdebb665c9415865827230565aa42f57c9c794baf.jpg"
+                          alt="Elena Rostova" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">ER</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Elena Rostova <span class="testimonial-country">🇨🇭
+                            Switzerland</span></div>
+                        <span class="testimonial-username">VP Product · Geneve Commerce</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Eternity modernized our multi-brand retail storefront using edge-rendered Next.js. Lighthouse
+                      performance scores rose to 98/100 and checkout abandonment fell by 34%.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/ae/ae1d49872fdd6f8d9aa933f6ca8bce8cb1ba7e87dfb9d2926661184cb7bfe26d.jpg"
+                          alt="Daniel Vance" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">DV</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Daniel Vance <span class="testimonial-country">🇺🇸 USA</span>
+                        </div>
+                        <span class="testimonial-username">CTO · Horizon Cloud SaaS</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Best technical partner we have hired in 10 years. Eternity re-architected our multi-tenant SaaS
+                      database tier to scale to 500k daily active users with 99.99% uptime.
+                    </blockquote>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column 6: Up (Reverse) -->
+            <div class="marquee-col marquee-col--reverse" data-column="6" aria-label="Client testimonials column 6">
+              <div class="marquee-track">
+                <div class="marquee-group">
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/9a/9aac54d62e727561f6958213b8a3649230a3bba61ba5ddf63c69d3c6e4aecb0a.jpg"
+                          alt="Yuki Tanaka" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">YT</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Yuki Tanaka <span class="testimonial-country">🇯🇵 Japan</span>
+                        </div>
+                        <span class="testimonial-username">Lead Architect · CyberSecure Tokyo</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Exceptional TypeScript discipline and reactive state architecture. Eternity converted a complex
+                      cybersecurity telemetry engine into a clean, sub-second web dashboard.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/f0/f07b84f12ef125cbb837a7bd64da401992f5f62bd55fee10d01cd3dcc8abae80.jpg"
+                          alt="Marcus Lindqvist" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">ML</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Marcus Lindqvist <span class="testimonial-country">🇸🇪
+                            Sweden</span></div>
+                        <span class="testimonial-username">Chief Technology Officer · PayNordic</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Eternity engineered our core payments engine with strict idempotency and PCI-DSS compliance. We
+                      launched on time and processed record Black Friday volumes without a hiccup.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/55/55cf6231499bcdc496f15ff1d28d4170ac9b99e9279495caa44fca70886d8b2e.jpg"
+                          alt="Amara Okafor" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">AO</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Amara Okafor <span class="testimonial-country">🇳🇬 Nigeria</span>
+                        </div>
+                        <span class="testimonial-username">Head of Product · Kora Financial</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      They developed our cross-border remittance app from ground zero. The biometric authentication,
+                      instant push updates, and offline resilience earned us 4.9 stars on both App Stores.
+                    </blockquote>
+                  </div>
+                </div>
+                <!-- Duplicate group for seamless infinite vertical loop -->
+                <div class="marquee-group" aria-hidden="true">
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/9a/9aac54d62e727561f6958213b8a3649230a3bba61ba5ddf63c69d3c6e4aecb0a.jpg"
+                          alt="Yuki Tanaka" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">YT</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Yuki Tanaka <span class="testimonial-country">🇯🇵 Japan</span>
+                        </div>
+                        <span class="testimonial-username">Lead Architect · CyberSecure Tokyo</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Exceptional TypeScript discipline and reactive state architecture. Eternity converted a complex
+                      cybersecurity telemetry engine into a clean, sub-second web dashboard.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/f0/f07b84f12ef125cbb837a7bd64da401992f5f62bd55fee10d01cd3dcc8abae80.jpg"
+                          alt="Marcus Lindqvist" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">ML</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Marcus Lindqvist <span class="testimonial-country">🇸🇪
+                            Sweden</span></div>
+                        <span class="testimonial-username">Chief Technology Officer · PayNordic</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Eternity engineered our core payments engine with strict idempotency and PCI-DSS compliance. We
+                      launched on time and processed record Black Friday volumes without a hiccup.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/55/55cf6231499bcdc496f15ff1d28d4170ac9b99e9279495caa44fca70886d8b2e.jpg"
+                          alt="Amara Okafor" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">AO</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Amara Okafor <span class="testimonial-country">🇳🇬 Nigeria</span>
+                        </div>
+                        <span class="testimonial-username">Head of Product · Kora Financial</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      They developed our cross-border remittance app from ground zero. The biometric authentication,
+                      instant push updates, and offline resilience earned us 4.9 stars on both App Stores.
+                    </blockquote>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column 7: Down -->
+            <div class="marquee-col" data-column="7" aria-label="Client testimonials column 7">
+              <div class="marquee-track">
+                <div class="marquee-group">
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/ae/ae1d49872fdd6f8d9aa933f6ca8bce8cb1ba7e87dfb9d2926661184cb7bfe26d.jpg"
+                          alt="Julian Mercer" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">JM</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Julian Mercer <span class="testimonial-country">🇨🇦 Canada</span>
+                        </div>
+                        <span class="testimonial-username">VP Engineering · BioSync Labs</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Cleanest full-stack engineering review our tech advisory board has ever seen. Eternity delivered
+                      our clinical data platform on time with thorough documentation and tests.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/f8/f8f2ddc445b6b2318430260bdebb665c9415865827230565aa42f57c9c794baf.jpg"
+                          alt="Isabella Santos" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">IS</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Isabella Santos <span class="testimonial-country">🇧🇷
+                            Brazil</span></div>
+                        <span class="testimonial-username">Head of Technology · Nubiz LatAm</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      High-velocity delivery without compromising software health. Eternity decomposed our legacy
+                      monolith into scalable containerized microservices in under four months.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/f0/f07b84f12ef125cbb837a7bd64da401992f5f62bd55fee10d01cd3dcc8abae80.jpg"
+                          alt="Felix Weber" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">FW</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Felix Weber <span class="testimonial-country">🇩🇪 Germany</span>
+                        </div>
+                        <span class="testimonial-username">Director of Cloud Ops · AutoVeritas</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Eternity's cloud architects redesigned our Kubernetes clusters and Redis caching layer. Database
+                      stress dropped 70% and our recurring cloud infrastructure cost was cut in half.
+                    </blockquote>
+                  </div>
+                </div>
+                <!-- Duplicate group for seamless infinite vertical loop -->
+                <div class="marquee-group" aria-hidden="true">
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/ae/ae1d49872fdd6f8d9aa933f6ca8bce8cb1ba7e87dfb9d2926661184cb7bfe26d.jpg"
+                          alt="Julian Mercer" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">JM</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Julian Mercer <span class="testimonial-country">🇨🇦 Canada</span>
+                        </div>
+                        <span class="testimonial-username">VP Engineering · BioSync Labs</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Cleanest full-stack engineering review our tech advisory board has ever seen. Eternity delivered
+                      our clinical data platform on time with thorough documentation and tests.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/f8/f8f2ddc445b6b2318430260bdebb665c9415865827230565aa42f57c9c794baf.jpg"
+                          alt="Isabella Santos" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">IS</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Isabella Santos <span class="testimonial-country">🇧🇷
+                            Brazil</span></div>
+                        <span class="testimonial-username">Head of Technology · Nubiz LatAm</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      High-velocity delivery without compromising software health. Eternity decomposed our legacy
+                      monolith into scalable containerized microservices in under four months.
+                    </blockquote>
+                  </div>
+                  <div class="testimonial-card">
+                    <div class="testimonial-card__header">
+                      <div class="testimonial-avatar">
+                        <img
+                          src="https://cdn.21st.dev/assets/mirror/f0/f07b84f12ef125cbb837a7bd64da401992f5f62bd55fee10d01cd3dcc8abae80.jpg"
+                          alt="Felix Weber" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="testimonial-avatar__fallback">FW</span>
+                      </div>
+                      <div class="testimonial-author">
+                        <div class="testimonial-name">Felix Weber <span class="testimonial-country">🇩🇪 Germany</span>
+                        </div>
+                        <span class="testimonial-username">Director of Cloud Ops · AutoVeritas</span>
+                      </div>
+                    </div>
+                    <blockquote class="testimonial-body">
+                      Eternity's cloud architects redesigned our Kubernetes clusters and Redis caching layer. Database
+                      stress dropped 70% and our recurring cloud infrastructure cost was cut in half.
+                    </blockquote>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
 
-          <div class="process-connector" aria-hidden="true"></div>
-
-          <div class="process-step fade-in fade-in--delay-2" id="step-develop">
-            <div class="process-step__number">03</div>
-            <div class="process-step__content">
-              <h3 class="process-step__title">Develop</h3>
-              <p class="process-step__desc">Building scalable and secure digital solutions with clean architecture and best practices.</p>
-            </div>
-          </div>
-
-          <div class="process-connector" aria-hidden="true"></div>
-
-          <div class="process-step fade-in fade-in--delay-3" id="step-deploy">
-            <div class="process-step__number">04</div>
-            <div class="process-step__content">
-              <h3 class="process-step__title">Deploy</h3>
-              <p class="process-step__desc">Smooth launch with full post-deployment support, monitoring, and continuous improvement.</p>
-            </div>
-          </div>
+          <!-- Gradient Fade Overlays -->
+          <div class="fade-overlay fade-overlay--top-left" aria-hidden="true"></div>
+          <div class="fade-overlay fade-overlay--top" aria-hidden="true"></div>
+          <div class="fade-overlay fade-overlay--bottom" aria-hidden="true"></div>
+          <div class="fade-overlay fade-overlay--left" aria-hidden="true"></div>
+          <div class="fade-overlay fade-overlay--right" aria-hidden="true"></div>
 
         </div>
       </div>
     </section>
 
-    <!-- ========== WHY CHOOSE US ========== -->
-    <section class="why-us">
-      <div class="container">
-        <div class="section-header fade-in">
-          <h2 class="section-heading section-heading--dark">Why Businesses Choose Eternity</h2>
-        </div>
+    <!-- ========== LETS WORK TOGETHER (INTERACTIVE CONTACT SECTION) ========== -->
+    <section class="lets-work-section" id="contact">
+      <div class="lets-work-container">
+        <div class="lets-work-wrap" id="lets-work-wrap">
 
-        <div class="pillars-grid">
-
-          <div class="pillar-card fade-in" id="pillar-agile">
-            <div class="pillar-card__icon">&#9889;</div>
-            <h3 class="pillar-card__title">Agile Process</h3>
-            <p class="pillar-card__desc">Fast iterations, clear communication, and zero surprises from kickoff to delivery.</p>
-          </div>
-
-          <div class="pillar-card fade-in fade-in--delay-1" id="pillar-delivery">
-            <div class="pillar-card__icon">&#128336;</div>
-            <h3 class="pillar-card__title">On-Time Delivery</h3>
-            <p class="pillar-card__desc">We respect your deadlines as much as you do. Commitments are non-negotiable for us.</p>
-          </div>
-
-          <div class="pillar-card fade-in fade-in--delay-2" id="pillar-quality">
-            <div class="pillar-card__icon">&#128737;</div>
-            <h3 class="pillar-card__title">Quality Assurance</h3>
-            <p class="pillar-card__desc">Tested, reviewed, and delivered with care. Every line of code goes through rigorous QA.</p>
-          </div>
-
-          <div class="pillar-card fade-in fade-in--delay-3" id="pillar-scalable">
-            <div class="pillar-card__icon">&#128200;</div>
-            <h3 class="pillar-card__title">Scalable Solutions</h3>
-            <p class="pillar-card__desc">Built to grow as your business grows. Architecture that handles tomorrow's demands.</p>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- ========== CTA / CONTACT SECTION ========== -->
-    <section class="cta-section" id="contact">
-      <div class="container">
-        <div class="cta-inner fade-in">
-          <div class="cta-content">
-            <h2 class="cta-heading">
-              Let's Build Something Amazing Together.<br />
-              <span class="text-muted-white">Discuss Your Project Today.</span>
-            </h2>
-            <p class="cta-subtext">Whether you have a full brief or just an idea — reach out. We'll help you figure out the rest.</p>
-
-            <div class="contact-details">
-              <a href="tel:+911234567890" class="contact-item" id="contact-phone">
-                <span class="contact-item__icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.36 2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.64a16 16 0 0 0 5.45 5.45l1-1a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 21 15.36l.02.56z"/>
-                  </svg>
-                </span>
-                <span class="contact-item__text">+91 12345 67890</span>
-              </a>
-              <a href="mailto:hello@eternity.dev" class="contact-item" id="contact-email">
-                <span class="contact-item__icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                    <polyline points="22,6 12,13 2,6"/>
-                  </svg>
-                </span>
-                <span class="contact-item__text">hello@eternity.dev</span>
-              </a>
-              <a href="https://www.eternity.dev" target="_blank" rel="noopener noreferrer" class="contact-item" id="contact-website">
-                <span class="contact-item__icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
-                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                  </svg>
-                </span>
-                <span class="contact-item__text">www.eternity.dev</span>
-              </a>
+          <!-- Success / Booking State (Revealed after clicking 'Let's work together') -->
+          <div class="lets-work-success" id="lets-work-success" aria-hidden="true">
+            <div class="lets-work-success__heading">
+              <span class="lets-work-success__tag">Perfect</span>
+              <h3 class="lets-work-success__title">Let's talk</h3>
             </div>
 
-            <a href="mailto:hello@eternity.dev" class="btn btn--primary cta-btn" id="cta-start-btn">
-              Start a Conversation &rarr;
+            <!-- Book a Call Button -->
+            <a href="https://cal.com/aryan-raj-eternity/quick-talk" target="_blank" rel="noopener noreferrer"
+              class="lets-work-book-btn group" id="lets-work-book-btn">
+              <div class="lets-work-line lets-work-line--left" aria-hidden="true"></div>
+              <div class="lets-work-book-pill">
+                <svg class="lets-work-cal-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                  <line x1="16" x2="16" y1="2" y2="6" />
+                  <line x1="8" x2="8" y1="2" y2="6" />
+                  <line x1="3" x2="21" y1="10" y2="10" />
+                </svg>
+                <span class="lets-work-book-text">Book a call</span>
+                <svg class="lets-work-arrow-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="7" y1="17" x2="17" y2="7" />
+                  <polyline points="7 7 17 7 17 17" />
+                </svg>
+              </div>
+              <div class="lets-work-line lets-work-line--right" aria-hidden="true"></div>
             </a>
+
+            <span class="lets-work-success__sub">Quick talk intro call</span>
+
+            <div class="lets-work-actions">
+              <a href="mailto:hello@eternity.dev?subject=Project%20Inquiry" class="btn btn--primary lets-work-inquiry-trigger" id="lets-work-inquiry-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                <span>Send Project Inquiry</span>
+              </a>
+              <button class="btn btn--ghost lets-work-reset-btn" id="lets-work-reset"
+                title="Back to interactive trigger">
+                &larr; Back
+              </button>
+            </div>
+
+            <div class="lets-work-success__alternatives">
+              <span>or email directly to <a href="mailto:hello@eternity.dev"
+                  class="lets-work-email-link">hello@eternity.dev</a></span>
+            </div>
           </div>
+
+
+          <!-- Interactive Trigger: 'Let's work together' -->
+          <div class="lets-work-trigger group" id="lets-work-trigger" role="button" tabindex="0"
+            aria-label="Click to get in touch">
+            <!-- Left accent line -->
+            <div class="lets-work-side-line lets-work-side-line--left" aria-hidden="true"></div>
+
+            <div class="lets-work-heading-wrap">
+              <h2 class="lets-work-heading">
+                <span class="lets-work-heading__line lets-work-heading__line--1">
+                  <span class="lets-work-line-inner">Let's work</span>
+                </span>
+                <span class="lets-work-heading__line lets-work-heading__line--2">
+                  <span class="lets-work-line-inner text-muted-dim">together</span>
+                </span>
+              </h2>
+
+              <!-- Circle Arrow Indicator -->
+              <div class="lets-work-circle-wrap">
+                <div class="lets-work-circle"></div>
+                <svg class="lets-work-circle-arrow" width="26" height="26" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="7" y1="17" x2="17" y2="7" />
+                  <polyline points="7 7 17 7 17 17" />
+                </svg>
+              </div>
+            </div>
+
+            <!-- Right accent line -->
+            <div class="lets-work-side-line lets-work-side-line--right" aria-hidden="true"></div>
+          </div>
+
+          <!-- Subtext & Email -->
+          <div class="lets-work-footer" id="lets-work-footer">
+            <p class="lets-work-desc">
+              Have a project in mind? We'd love to hear about it. Let's create something exceptional together.
+            </p>
+            <div class="lets-work-contacts">
+              <a href="mailto:hello@eternity.dev" class="lets-work-email">hello@eternity.dev</a>
+              <span class="lets-work-sep">&bull;</span>
+              <a href="tel:+911234567890" class="lets-work-phone">+91 12345 67890</a>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
+
+
+
+    <!-- ========== TESTIMONIAL DETAIL POPUP MODAL (BLACK COMPONENT) ========== -->
+    <div id="testimonial-modal"
+      class="fixed inset-0 z-[100] hidden items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md"
+      aria-modal="true" role="dialog" aria-labelledby="tm-modal-name">
+      <!-- Backdrop Click Area -->
+      <div class="absolute inset-0 cursor-pointer" onclick="closeTestimonialModal()" aria-label="Close modal backdrop">
+      </div>
+
+      <!-- Modal Dialog Card (Obsidian Black Theme, Squarish, No Border) -->
+      <div
+        class="testimonial-modal-card relative z-10 w-full max-w-lg bg-[#0A0A0A] text-white p-7 sm:p-9 rounded-none shadow-none overflow-hidden">
+        <!-- Subtle ambient radial accents -->
+        <div class="pointer-events-none absolute -top-24 -right-24 w-56 h-56 bg-white/[0.03] rounded-full blur-3xl">
+        </div>
+        <div class="pointer-events-none absolute -bottom-24 -left-24 w-56 h-56 bg-white/[0.03] rounded-full blur-3xl">
+        </div>
+
+        <!-- Top Right Close Button -->
+        <button type="button" onclick="closeTestimonialModal()"
+          class="testimonial-modal-close-btn absolute top-5 right-5 z-20 p-2 text-neutral-400 hover:text-white hover:bg-white/10 rounded-none transition-colors"
+          aria-label="Close testimonial popup">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+
+        <!-- Author Profile Section -->
+        <div class="relative z-10 flex items-start gap-4 mb-6 pr-10">
+          <div class="relative flex-shrink-0">
+            <div
+              class="w-14 h-14 rounded-full overflow-hidden bg-neutral-900 shadow-md relative flex items-center justify-center">
+              <img id="tm-modal-avatar" src="" alt="Client" class="w-full h-full object-cover"
+                onerror="this.style.display='none'; document.getElementById('tm-modal-fallback').style.display='flex';" />
+              <span id="tm-modal-fallback"
+                class="absolute inset-0 items-center justify-center font-bold text-sm text-white bg-neutral-800 uppercase hidden">EC</span>
+            </div>
+          </div>
+
+          <div class="flex-1 min-w-0 pt-0.5">
+            <div class="flex flex-wrap items-center gap-2">
+              <h3 id="tm-modal-name" class="text-xl font-semibold text-white tracking-tight leading-tight"></h3>
+              <span id="tm-modal-country"
+                class="text-xs font-mono px-2 py-0.5 rounded-none bg-white/10 text-neutral-300"></span>
+            </div>
+            <div class="flex items-center gap-3 mt-1.5">
+              <span id="tm-modal-handle" class="text-xs font-mono text-neutral-400"></span>
+              <span class="text-neutral-600 text-xs">•</span>
+              <div class="flex text-amber-400 text-xs tracking-wider" aria-label="5 out of 5 stars">
+                ★★★★★
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full Testimonial Quote Box (Squarish, No Border) -->
+        <div class="relative z-10 testimonial-modal-quote-box bg-[#141414] rounded-none p-6 sm:p-7 mb-6">
+          <svg class="absolute top-4 right-4 w-7 h-7 text-white/10 pointer-events-none" fill="currentColor"
+            viewBox="0 0 24 24">
+            <path
+              d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+          </svg>
+          <p id="tm-modal-quote"
+            class="text-base sm:text-lg text-neutral-100 font-light leading-relaxed tracking-wide italic"></p>
+        </div>
+
+        <!-- Panel Footer -->
+        <div class="relative z-10 flex items-center justify-between text-xs font-mono text-neutral-400">
+          <div class="flex items-center gap-2">
+            <span class="text-neutral-500">ENGAGEMENT:</span>
+            <span class="text-neutral-300">FULL-CYCLE DIGITAL ENGINEERING</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
   </main>
 
   <!-- ========== FOOTER ========== -->
-  <footer class="footer">
-    <div class="container footer__inner">
-      <div class="footer__col footer__col--brand">
-        <div class="footer__logo">
-          <span class="logo-monogram">EA</span>
-          <div class="logo-text">
-            <span class="logo-name">ETERNITY</span>
-            <span class="logo-tagline">Website & Application Development</span>
-          </div>
-        </div>
-        <p class="footer__desc">We build digital solutions that power businesses everywhere — from idea to deployment.</p>
-      </div>
-
-      <div class="footer__col">
-        <h4 class="footer__col-title">Quick Links</h4>
-        <ul class="footer__links">
-          <li><a href="#home" class="footer__link">Home</a></li>
-          <li><a href="#services" class="footer__link">Services</a></li>
-          <li><a href="#work" class="footer__link">Work</a></li>
-          <li><a href="#about" class="footer__link">About</a></li>
-          <li><a href="#contact" class="footer__link">Contact</a></li>
-        </ul>
-      </div>
-
-      <div class="footer__col">
-        <h4 class="footer__col-title">Contact</h4>
-        <ul class="footer__links">
-          <li><a href="mailto:hello@eternity.dev" class="footer__link">hello@eternity.dev</a></li>
-          <li><a href="tel:+911234567890" class="footer__link">+91 12345 67890</a></li>
-          <li><a href="https://www.eternity.dev" target="_blank" rel="noopener noreferrer" class="footer__link">www.eternity.dev</a></li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="footer__bottom">
-      <div class="container footer__bottom-inner">
-        <span class="footer__copyright">&copy; 2025 Eternity. All rights reserved.</span>
-        <span class="footer__motto">Design. Develop. Deploy. Grow.</span>
-      </div>
+  <footer
+    class="relative z-20 w-full px-8 lg:px-16 py-8 border-t border-line flex flex-col sm:flex-row items-center justify-between text-xs font-mono text-neutral-500 bg-[#050505]">
+    <div>&copy; ETERNITY ENGINEERING CORP. ALL RIGHTS RESERVED.</div>
+    <div class="flex flex-wrap items-center gap-6 mt-4 sm:mt-0">
+      <a href="#services" class="hover:text-white transition-colors">ENGINEERING</a>
+      <a href="#about" class="hover:text-white transition-colors">STANDARDS</a>
+      <a href="#reviews" class="hover:text-white transition-colors">REVIEWS</a>
+      <a href="#contact" class="hover:text-white transition-colors">CONTACT</a>
+      <span class="text-neutral-700">|</span>
+      <a href="#" class="hover:text-white transition-colors">PRIVACY</a>
+      <a href="#" class="hover:text-white transition-colors">TERMS</a>
+      <a href="#" class="hover:text-white transition-colors">SECURITY</a>
     </div>
   </footer>
 
+  <!-- ========== STICKY BOTTOM-RIGHT SHINY CONTACT BUTTON ========== -->
+  <aside class="fixed-contact-widget" id="fixed-contact-widget" aria-label="Quick contact">
+    <a href="#contact" class="gleam-edge-contact" id="sticky-contact-btn" aria-label="Contact Us">
+      <span class="gleam-content">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round" class="contact-icon" aria-hidden="true">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <span>Contact Us</span>
+      </span>
+    </a>
+  </aside>
+
+  <script src="lib/tubes1.js"></script>
   <script src="script.js"></script>
 </body>
+
 </html>
