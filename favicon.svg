@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Background: obsidian square with slight rounding -->
+  <rect width="32" height="32" rx="6" fill="#050505"/>
+  <!-- Inner subtle border -->
+  <rect x="1" y="1" width="30" height="30" rx="5.5" stroke="rgba(255,255,255,0.12)" stroke-width="1" fill="none"/>
+  <!-- "E" lettermark — clean geometric sans-serif -->
+  <text
+    x="16"
+    y="22"
+    font-family="'Plus Jakarta Sans', 'Arial Black', Arial, sans-serif"
+    font-weight="800"
+    font-size="20"
+    fill="#FFFFFF"
+    text-anchor="middle"
+    dominant-baseline="auto"
+    letter-spacing="-0.5"
+  >E</text>
+</svg>
