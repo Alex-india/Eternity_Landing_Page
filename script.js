@@ -651,14 +651,41 @@
     const canvas = document.getElementById('tubes-cursor-canvas');
     if (!canvas || canvas.__tubesApp) return;
 
-    // On mobile screens, the 3D tubes canvas renders too large and degrades performance.
-    // Hide it entirely on screens narrower than 768px.
-    if (window.innerWidth < 768) {
+    const isTouch = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Phone users who asked for reduced motion get the static hero
+    if (isTouch && reduceMotion) {
       canvas.style.display = 'none';
       return;
     }
 
     let app = null;
+
+    // Touch support: the flare follows the finger, but every listener is passive,
+    // so the browser always keeps native scrolling. The library already tracks
+    // touchmove; we add the initial tap and a return to the idle figure-8 afterwards.
+    function bindTouch() {
+      const heroStage = document.querySelector('.hero-zoom-stage');
+      if (!heroStage) return;
+      let idleTimer = null;
+
+      heroStage.addEventListener('touchstart', (e) => {
+        const t = e.touches && e.touches[0];
+        if (!t) return;
+        clearTimeout(idleTimer);
+        // A tap alone fires no pointermove, so jump the flare to the finger ourselves
+        window.dispatchEvent(new PointerEvent('pointermove', { clientX: t.clientX, clientY: t.clientY }));
+      }, { passive: true });
+
+      const release = () => {
+        clearTimeout(idleTimer);
+        // Touch never fires pointerleave, so hand control back to the idle loop
+        idleTimer = setTimeout(() => document.dispatchEvent(new Event('pointerleave')), 1400);
+      };
+      heroStage.addEventListener('touchend', release, { passive: true });
+      heroStage.addEventListener('touchcancel', release, { passive: true });
+    }
 
     const randomColors = (count) => {
       return new Array(count)
@@ -679,6 +706,15 @@
           }
         });
         canvas.__tubesApp = app;
+
+        if (isTouch && app && app.three) {
+          // The library forces 2x resolution; on phones 1–1.5x keeps it smooth and
+          // is visually identical under the bloom glow
+          app.three.minPixelRatio = 1;
+          app.three.maxPixelRatio = 1.5;
+          app.three.resize();
+          bindTouch();
+        }
 
         // Elevate the 3D infinity symbol (lemniscate) moving flare just a bit in Three.js world space
         if (app && app.tubes && typeof app.tubes.update === 'function') {
@@ -1041,7 +1077,8 @@
         stage.style.position = 'relative';
         stage.style.top = '0px';
         stage.style.height = 'auto';
-        stage.style.minHeight = 'calc(100vh - 52px)';
+        // svh = viewport height with mobile browser chrome visible, so the hero never jumps
+        stage.style.minHeight = 'calc(100svh - var(--mobile-header-h, 56px))';
       }
 
       // Full stage dimensions (ETERNITY vector camera spans the full hero stage)
@@ -1066,8 +1103,9 @@
         startScale = (W * 0.85) / bounds.width;
       }
 
-      // Optical centering: no upward offset on mobile so ETERNITY sits dead-centre
-      const yOffset = isDesktop ? 40 : 0;
+      // Optical centering: dead-centre on tall phones; on short phones (e.g. iPhone SE)
+      // lift it so it clears the bottom content block
+      const yOffset = isDesktop ? 40 : (window.innerHeight < 720 ? 36 : 0);
 
       stage.style.setProperty('--hero-center-offset-y', `${yOffset}px`);
       stage.style.setProperty('--hero-flare-offset-y', `${yOffset + (isDesktop ? 28 : 0)}px`);
@@ -1404,12 +1442,32 @@ document.addEventListener('keydown', function (e) {
   }
 });
 
-window.toggleMobileNav = function () {
+window.toggleMobileNav = function (force) {
   const menu = document.getElementById('mobile-nav-menu');
-  if (menu) {
-    menu.classList.toggle('hidden');
+  const toggle = document.getElementById('mobile-nav-toggle');
+  if (!menu) return;
+  const open = typeof force === 'boolean' ? force : !menu.classList.contains('is-open');
+  menu.classList.toggle('is-open', open);
+  menu.setAttribute('aria-hidden', String(!open));
+  document.body.classList.toggle('is-nav-open', open);
+  if (toggle) {
+    toggle.classList.toggle('is-open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
   }
 };
+
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && document.body.classList.contains('is-nav-open')) {
+    window.toggleMobileNav(false);
+  }
+});
+
+window.addEventListener('resize', function () {
+  if (window.innerWidth >= 768 && document.body.classList.contains('is-nav-open')) {
+    window.toggleMobileNav(false);
+  }
+}, { passive: true });
 
 // Master Platform Circuit & Interaction Engine
 (function () {

@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>ETERNITY — Web + Mobile Engineering</title>
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -122,29 +122,31 @@
         class="header-cta-btn hidden sm:inline-flex text-xs font-mono uppercase tracking-widest px-4 py-2 bg-white text-black hover:bg-neutral-200 transition-all">
         Inquire
       </a>
-      <button onclick="toggleMobileNav()"
-        class="md:hidden text-xs font-mono uppercase tracking-widest text-neutral-300 hover:text-white transition-colors p-2"
-        aria-label="Toggle navigation">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-          <line x1="3" y1="12" x2="21" y2="12"></line>
-          <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
+      <button id="mobile-nav-toggle" type="button" onclick="toggleMobileNav()"
+        class="mobile-nav-toggle md:hidden text-neutral-300 hover:text-white transition-colors"
+        aria-label="Open menu" aria-controls="mobile-nav-menu" aria-expanded="false">
+        <span class="mobile-nav-toggle__bar"></span>
+        <span class="mobile-nav-toggle__bar"></span>
+        <span class="mobile-nav-toggle__bar"></span>
       </button>
     </div>
   </header>
 
-  <!-- Mobile Nav Dropdown -->
-  <div id="mobile-nav-menu"
-    class="hidden md:hidden fixed inset-x-0 top-[65px] bg-[#0A0A0A] border-b border-line p-6 z-50 flex flex-col gap-4 font-mono text-xs uppercase tracking-widest">
-    <a href="#services" onclick="toggleMobileNav()" class="text-neutral-300 hover:text-white py-2">Engineering</a>
-    <a href="#about" onclick="toggleMobileNav()" class="text-neutral-300 hover:text-white py-2">Standards</a>
-    <a href="#reviews" onclick="toggleMobileNav()" class="text-neutral-300 hover:text-white py-2">Reviews</a>
-    <a href="#contact" onclick="toggleMobileNav()" class="text-neutral-300 hover:text-white py-2">Contact</a>
-    <div class="pt-4 border-t border-line">
-      <a href="#contact" onclick="toggleMobileNav()"
-        class="block w-full py-2.5 bg-white text-black text-center text-xs font-mono uppercase tracking-widest hover:bg-neutral-200 transition-colors">Inquire</a>
-    </div>
+  <!-- Mobile Nav Overlay -->
+  <div id="mobile-nav-menu" class="mobile-nav md:hidden" aria-hidden="true">
+    <div class="mobile-nav__backdrop" onclick="toggleMobileNav(false)"></div>
+    <nav class="mobile-nav__panel" aria-label="Mobile navigation">
+      <a href="#services" onclick="toggleMobileNav(false)" class="mobile-nav__link"><span
+          class="mobile-nav__num">01</span>Engineering</a>
+      <a href="#about" onclick="toggleMobileNav(false)" class="mobile-nav__link"><span
+          class="mobile-nav__num">02</span>Standards</a>
+      <a href="#reviews" onclick="toggleMobileNav(false)" class="mobile-nav__link"><span
+          class="mobile-nav__num">03</span>Reviews</a>
+      <a href="#contact" onclick="toggleMobileNav(false)" class="mobile-nav__link"><span
+          class="mobile-nav__num">04</span>Contact</a>
+      <a href="#contact" onclick="toggleMobileNav(false)" class="mobile-nav__cta">Inquire &rarr;</a>
+      <p class="mobile-nav__meta">Available for new projects <span>//</span> Worldwide</p>
+    </nav>
   </div>
 
   <main class="relative z-10">
@@ -208,7 +210,7 @@
                 </div>
               </div>
 
-              <div class="lg:col-span-6 grid grid-cols-2 sm:grid-cols-3 gap-6 font-mono text-xs text-neutral-400">
+              <div class="hero-metrics lg:col-span-6 grid grid-cols-2 sm:grid-cols-3 gap-6 font-mono text-xs text-neutral-400">
                 <div>
                   <span class="block text-white font-bold text-base sm:text-lg">01 / ARCHITECTURE</span>
                   <span class="text-neutral-500 text-xs">Fault-tolerant distributed systems</span>
@@ -217,7 +219,7 @@
                   <span class="block text-white font-bold text-base sm:text-lg">02 / INTERFACE</span>
                   <span class="text-neutral-500 text-xs">Precision design &amp; fluid UX</span>
                 </div>
-                <div class="hidden sm:block">
+                <div class="hero-metric--third hidden sm:block">
                   <span class="block text-white font-bold text-base sm:text-lg">03 / EXECUTION</span>
                   <span class="text-neutral-500 text-xs">Mission-critical performance</span>
                 </div>
@@ -1924,14 +1926,14 @@
 
   <!-- ========== FOOTER ========== -->
   <footer
-    class="relative z-20 w-full px-8 lg:px-16 py-8 border-t border-line flex flex-col sm:flex-row items-center justify-between text-xs font-mono text-neutral-500 bg-[#050505]">
-    <div>&copy; ETERNITY ENGINEERING CORP. ALL RIGHTS RESERVED.</div>
-    <div class="flex flex-wrap items-center gap-6 mt-4 sm:mt-0">
+    class="site-footer relative z-20 w-full px-8 lg:px-16 py-8 border-t border-line flex flex-col sm:flex-row items-center justify-between text-xs font-mono text-neutral-500 bg-[#050505]">
+    <div class="site-footer__copy">&copy; ETERNITY ENGINEERING CORP. ALL RIGHTS RESERVED.</div>
+    <div class="site-footer__links flex flex-wrap items-center gap-6 mt-4 sm:mt-0">
       <a href="#services" class="hover:text-white transition-colors">ENGINEERING</a>
       <a href="#about" class="hover:text-white transition-colors">STANDARDS</a>
       <a href="#reviews" class="hover:text-white transition-colors">REVIEWS</a>
       <a href="#contact" class="hover:text-white transition-colors">CONTACT</a>
-      <span class="text-neutral-700">|</span>
+      <span class="site-footer__sep text-neutral-700">|</span>
       <a href="#" class="hover:text-white transition-colors">PRIVACY</a>
       <a href="#" class="hover:text-white transition-colors">TERMS</a>
       <a href="#" class="hover:text-white transition-colors">SECURITY</a>
