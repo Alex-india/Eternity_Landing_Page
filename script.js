@@ -712,6 +712,16 @@
           // is visually identical under the bloom glow
           app.three.minPixelRatio = 1;
           app.three.maxPixelRatio = 1.5;
+          // Portrait screens: widen the camera so the shape fits the width instead of
+          // being cropped at the sides (finger tracking uses this camera, so it stays aligned)
+          app.three.cameraMinAspect = 1.1;
+          // The idle figure-8 is sized in screen px (±300 by default); fit it to the phone
+          const fitIdleLoop = () => {
+            app.options.sleepRadiusX = Math.min(300, window.innerWidth * 0.3);
+            app.options.sleepRadiusY = Math.min(150, window.innerWidth * 0.2);
+          };
+          fitIdleLoop();
+          window.addEventListener('resize', fitIdleLoop, { passive: true });
           app.three.resize();
           bindTouch();
         }
@@ -1074,11 +1084,12 @@
         stage.style.height = 'calc(100vh - var(--header-height, 52px))';
         stage.style.minHeight = '560px';
       } else {
-        stage.style.position = 'relative';
-        stage.style.top = '0px';
-        stage.style.height = 'auto';
-        // svh = viewport height with mobile browser chrome visible, so the hero never jumps
-        stage.style.minHeight = 'calc(100svh - var(--mobile-header-h, 56px))';
+        // Pinned like desktop; svh = viewport with browser chrome visible, so the
+        // stage doesn't resize (and re-calibrate) when the URL bar shows or hides
+        stage.style.position = 'sticky';
+        stage.style.top = 'var(--mobile-header-h, 56px)';
+        stage.style.height = 'calc(100svh - var(--mobile-header-h, 56px))';
+        stage.style.minHeight = '0px';
       }
 
       // Full stage dimensions (ETERNITY vector camera spans the full hero stage)
@@ -1237,11 +1248,10 @@
           targetProgress = 0;
         }
       } else {
-        // On mobile, hero-zoom-track height is auto. Use 80% of viewport height
-        // as the scroll distance that triggers the full zoom.
+        // On mobile the stage is pinned for exactly (track height - stage height) of scroll
         const scrollY = window.scrollY || window.pageYOffset || 0;
-        const mobileTravel = window.innerHeight * 0.8;
-        targetProgress = Math.max(0, Math.min(1, scrollY / mobileTravel));
+        const travel = track.offsetHeight - stage.offsetHeight;
+        targetProgress = travel > 0 ? Math.max(0, Math.min(1, scrollY / travel)) : 0;
       }
 
       if (immediate) {
