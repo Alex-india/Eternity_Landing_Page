@@ -6,7 +6,7 @@
 
 const express = require('express');
 const { query } = require('../db/connection');
-const { requireAuth } = require('../middleware/auth');
+const { requireOwner } = require('../middleware/auth');
 const { sendInquiryReceipt } = require('../services/email');
 
 const router = express.Router();
@@ -108,7 +108,7 @@ router.post('/', async (req, res) => {
 
 /* ─── GET /api/inquiries (admin/authenticated) ─── */
 
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireOwner, async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));

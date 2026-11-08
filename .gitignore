@@ -21,6 +21,7 @@ dist-ssr/
 Thumbs.db
 .vscode/
 .idea/
+.local-test/
 *.suo
 *.ntvs*
 *.njsproj

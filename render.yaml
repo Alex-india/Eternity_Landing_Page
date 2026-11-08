@@ -24,3 +24,13 @@ services:
         sync: false
       - key: BREVO_API_KEY
         sync: false
+      - key: OWNER_EMAIL
+        sync: false
+      - key: CREATOR_WHATSAPP_NUMBER
+        sync: false
+      - key: CREATOR_AGENCY_NAME
+        value: Eternity Creator Network
+      - key: CREATOR_EMAIL_ENABLED
+        value: "false"
+      - key: CAL_WEBHOOK_SECRET
+        sync: false

@@ -65,6 +65,7 @@ async function sendBrevoEmail({ to, subject, htmlContent, textContent, replyTo }
 
   try {
     const response = await fetch(BREVO_API_URL, {
+      signal: AbortSignal.timeout(6000),
       method: 'POST',
       headers: {
         'api-key': apiKey,

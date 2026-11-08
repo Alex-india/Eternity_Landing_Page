@@ -5389,8 +5389,10 @@ body.is-nav-open .fixed-contact-widget {
 
   /* ── Hero: pinned like desktop, so ETERNITY zooms in place while you scroll
         through the track instead of scrolling away mid-zoom ── */
+  /* Taller than desktop's 200vh: a thumb swipe coasts much further than a mouse-wheel
+     notch, so the zoom needs more scroll distance to play out rather than finish in one flick */
   .hero-zoom-track {
-    height: 200svh !important;
+    height: 320svh !important;
   }
 
   .hero-zoom-stage {

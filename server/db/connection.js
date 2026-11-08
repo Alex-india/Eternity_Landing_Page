@@ -7,9 +7,7 @@ const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false, // Required for Neon serverless
-  },
+  ssl: process.env.DATABASE_SSL === 'false' && process.env.NODE_ENV !== 'production' ? false : { rejectUnauthorized: true },
   max: 10,                    // Max connections in pool
   idleTimeoutMillis: 30000,   // Close idle connections after 30s
   connectionTimeoutMillis: 10000, // Timeout connecting after 10s

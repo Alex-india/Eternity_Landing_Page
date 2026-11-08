@@ -9,7 +9,8 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const { query } = require('../db/connection');
-const { requireAuth, generateToken } = require('../middleware/auth');
+const { requireOwner, generateToken } = require('../middleware/auth');
+const { ownerEmail } = require('../config');
 
 const router = express.Router();
 const SALT_ROUNDS = 12;
@@ -75,7 +76,13 @@ function validateLoginInput(body) {
 /* ─── POST /api/auth/signup ─── */
 
 router.post('/signup', async (req, res) => {
+  if (process.env.NODE_ENV === 'production' || process.env.ALLOW_DEV_SIGNUP !== 'true') {
+    return res.status(403).json({ message: 'Public registration is closed.' });
+  }
   try {
+    if (typeof req.body.email !== 'string' || req.body.email.trim().toLowerCase() === ownerEmail()) return res.status(403).json({ message: 'This account must be provisioned privately.' });
+    if (!['firstName', 'lastName', 'email', 'password'].every((key) => typeof req.body[key] === 'string')) return res.status(400).json({ message: 'Invalid registration fields.' });
+    if (Buffer.byteLength(req.body.password) > 72) return res.status(400).json({ message: 'Password is too long.' });
     const { isValid, errors } = validateSignupInput(req.body);
     if (!isValid) {
       return res.status(400).json({ error: 'Validation failed', errors });
@@ -141,6 +148,7 @@ router.post('/signup', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   try {
+    if (typeof req.body.email !== 'string' || typeof req.body.password !== 'string' || Buffer.byteLength(req.body.password) > 72) return res.status(400).json({ message: 'Invalid login fields.' });
     const { isValid, errors } = validateLoginInput(req.body);
     if (!isValid) {
       return res.status(400).json({ error: 'Validation failed', errors });
@@ -151,7 +159,7 @@ router.post('/login', async (req, res) => {
 
     // Find user by email
     const result = await query(
-      'SELECT id, first_name, last_name, email, password_hash FROM users WHERE email = $1',
+      'SELECT id, first_name, last_name, email, password_hash, role, session_version FROM users WHERE email = $1',
       [email]
     );
 
@@ -163,6 +171,8 @@ router.post('/login', async (req, res) => {
     }
 
     const user = result.rows[0];
+    // Owner credentials are accepted only by the cookie-based admin login.
+    if (user.role === 'owner') return res.status(403).json({ message: 'Sign in at /admin/login.' });
 
     // Compare password
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
@@ -205,7 +215,7 @@ router.post('/login', async (req, res) => {
 
 /* ─── GET /api/auth/me ─── */
 
-router.get('/me', requireAuth, async (req, res) => {
+router.get('/me', requireOwner, async (req, res) => {
   try {
     const result = await query(
       'SELECT id, first_name, last_name, email, created_at FROM users WHERE id = $1',

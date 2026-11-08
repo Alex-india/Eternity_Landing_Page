@@ -1,105 +1,59 @@
-/* ============================================================
-   ETERNITY — JWT Authentication Middleware
-   Verifies Bearer token from Authorization header or cookie.
-   Attaches decoded user to req.user on success.
-   ============================================================ */
-
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-
-/**
- * Required auth — rejects request if no valid token.
- */
-function requireAuth(req, res, next) {
-  const token = extractToken(req);
-
-  if (!token) {
-    return res.status(401).json({
-      error: 'Authentication required',
-      message: 'Please log in to access this resource.',
-    });
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = {
-      id: decoded.id,
-      email: decoded.email,
-      firstName: decoded.firstName,
-      lastName: decoded.lastName,
-    };
-    next();
-  } catch (err) {
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        error: 'Token expired',
-        message: 'Your session has expired. Please log in again.',
-      });
-    }
-    return res.status(401).json({
-      error: 'Invalid token',
-      message: 'Authentication failed. Please log in again.',
-    });
-  }
+const { query } = require('../db/connection');
+const { ownerEmail } = require('../config');
+const COOKIE = 'eternity_admin';
+const cookieOptions = () => ({ httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/' });
+function reject(req, res, status, message) {
+  if (/^\/admin(?:\/|$)/.test(req.originalUrl)) return res.redirect(303, '/admin/login');
+  return res.status(status).json({ message });
 }
-
-/**
- * Optional auth — attaches user if token present, but doesn't reject.
- */
-function optionalAuth(req, res, next) {
-  const token = extractToken(req);
-
-  if (token) {
+function cookieToken(req) {
+  const part = (req.headers.cookie || '').split(';').map((s) => s.trim()).find((s) => s.startsWith(COOKIE + '='));
+  return part ? part.slice(COOKIE.length + 1) : null;
+}
+function extractToken(req) {
+  const bearer = req.get('authorization');
+  req.authViaCookie = !bearer;
+  if (bearer) return bearer.startsWith('Bearer ') ? bearer.slice(7) : null;
+  return cookieToken(req);
+}
+function requireAuth(req, res, next) {
+  try {
+    const token = extractToken(req);
+    if (!token) return reject(req, res, 401, 'Please log in.');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+    if (!Number.isInteger(decoded.id)) throw new Error('Invalid user');
+    if (req.authViaCookie && decoded.purpose !== 'admin') throw new Error('Invalid session');
+    req.user = decoded;
+    next();
+  } catch { reject(req, res, 401, 'Session expired or invalid. Please log in again.'); }
+}
+// Read current authorization from PostgreSQL; never trust a role in a token.
+function requireOwner(req, res, next) {
+  res.setHeader('Cache-Control', 'no-store');
+  requireAuth(req, res, async () => {
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = {
-        id: decoded.id,
-        email: decoded.email,
-        firstName: decoded.firstName,
-        lastName: decoded.lastName,
-      };
-    } catch (err) {
-      // Token invalid/expired — proceed without user
-      req.user = null;
-    }
-  } else {
-    req.user = null;
-  }
-
+      const result = await query('SELECT id, email, role, session_version FROM users WHERE id = $1', [req.user.id]);
+      const user = result.rows[0];
+      if (!user || user.role !== 'owner' || !ownerEmail() || user.email.toLowerCase() !== ownerEmail() || user.session_version !== req.user.sessionVersion || req.user.purpose !== 'admin') return reject(req, res, 403, 'Owner access required.');
+      if (req.authViaCookie && !['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+        const csrf = req.get('x-csrf-token') || '';
+        if (!csrf || csrf !== req.user.csrf) return res.status(403).json({ message: 'Invalid security token. Reload and try again.' });
+      }
+      req.owner = user;
+      next();
+    } catch (err) { next(err); }
+  });
+}
+function sameOrigin(req, res, next) {
+  const origin = req.get('origin');
+  if ((origin && origin !== `${req.protocol}://${req.get('host')}`) || req.get('sec-fetch-site') === 'cross-site') return res.status(403).json({ message: 'Use this form on the original website.' });
   next();
 }
-
-/**
- * Extract JWT from Authorization header or cookie.
- */
-function extractToken(req) {
-  // Check Authorization header first
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    return authHeader.substring(7);
-  }
-
-  // Fallback to cookie
-  if (req.cookies && req.cookies.eternity_token) {
-    return req.cookies.eternity_token;
-  }
-
-  return null;
+function generateToken(user, admin = false) {
+  return jwt.sign({ id: user.id, email: user.email, firstName: user.first_name, lastName: user.last_name,
+    sessionVersion: user.session_version, purpose: admin ? 'admin' : 'site', ...(admin ? { csrf: crypto.randomBytes(32).toString('hex') } : {}),
+  }, process.env.JWT_SECRET, { algorithm: 'HS256', expiresIn: admin ? '8h' : '1d' });
 }
-
-/**
- * Generate a JWT for a user.
- */
-function generateToken(user) {
-  return jwt.sign(
-    {
-      id: user.id,
-      email: user.email,
-      firstName: user.first_name,
-      lastName: user.last_name,
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-  );
-}
-
-module.exports = { requireAuth, optionalAuth, generateToken };
+module.exports = { requireAuth, requireOwner, sameOrigin, generateToken, COOKIE, cookieOptions };

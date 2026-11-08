@@ -9,7 +9,8 @@
 
 const express = require('express');
 const { query } = require('../db/connection');
-const { requireAuth } = require('../middleware/auth');
+const { requireOwner } = require('../middleware/auth');
+const { verifyCalWebhook } = require('../middleware/webhook');
 const {
   sendBookingConfirmation,
   sendBookingAdminAlert,
@@ -32,7 +33,7 @@ router.get('/url', (req, res) => {
 });
 
 /* ─── GET /api/cal/email-status (Diagnostics for Brevo) ─── */
-router.get('/email-status', async (req, res) => {
+router.get('/email-status', requireOwner, async (req, res) => {
   const apiKey = process.env.BREVO_API_KEY;
   if (!apiKey) {
     return res.json({
@@ -77,7 +78,7 @@ router.get('/email-status', async (req, res) => {
 });
 
 /* ─── GET /api/cal/bookings (Authenticated) ─── */
-router.get('/bookings', requireAuth, async (req, res) => {
+router.get('/bookings', requireOwner, async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20));
@@ -111,7 +112,7 @@ router.get('/bookings', requireAuth, async (req, res) => {
 });
 
 /* ─── POST /api/cal/send-confirmation (Send Booking Email Directly) ─── */
-router.post('/send-confirmation', async (req, res) => {
+router.post('/send-confirmation', requireOwner, async (req, res) => {
   try {
     const { attendeeName, attendeeEmail, startTime, endTime, title } = req.body;
 
@@ -163,7 +164,7 @@ router.post('/send-confirmation', async (req, res) => {
 });
 
 /* ─── POST /api/cal/webhook (Cal.com Webhook Listener) ─── */
-router.post('/webhook', async (req, res) => {
+router.post('/webhook', verifyCalWebhook, async (req, res) => {
   try {
     const event = req.body;
     console.log(`  [cal] Webhook received: ${event.triggerEvent || 'UNKNOWN'}`);

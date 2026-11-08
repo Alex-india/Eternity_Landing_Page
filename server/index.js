@@ -4,7 +4,7 @@
    database migrations on startup, and starts listening.
    ============================================================ */
 
-require('dotenv').config();
+const { validateEnv } = require('./config');
 
 const path = require('path');
 const express = require('express');
@@ -22,24 +22,8 @@ const PORT = process.env.PORT || 3000;
 
 /* ─── Startup Validation ─── */
 
-function validateEnv() {
-  const required = ['DATABASE_URL', 'JWT_SECRET'];
-  const missing = required.filter((key) => !process.env[key]);
-
-  if (missing.length > 0) {
-    console.error('\n  ✗ Missing required environment variables:');
-    missing.forEach((key) => console.error(`    - ${key}`));
-    console.error('\n  → Copy .env.example to .env and fill in your values.\n');
-    process.exit(1);
-  }
-
-  if (process.env.JWT_SECRET === 'change-this-to-a-random-secret-key-at-least-32-chars') {
-    console.warn('\n  ⚠ WARNING: You are using the default JWT_SECRET!');
-    console.warn('  → Generate a secure secret: node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"\n');
-  }
-}
-
 validateEnv();
+app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : false);
 
 /* ─── Middleware ─── */
 
@@ -50,32 +34,18 @@ app.use(helmet({
 }));
 
 // CORS — allow frontend origin
-const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:5173',
-  'http://localhost:5173',
-  'http://localhost:5500',  // Live Server default
-  'http://127.0.0.1:5173',
-  'http://127.0.0.1:5500',
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (curl, Postman, server-to-server)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    // In development, be lenient with localhost ports
-    if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
-      return callback(null, true);
-    }
-    callback(new Error('CORS: Origin not allowed'));
-  },
-  credentials: true,
+app.use(cors((req, callback) => {
+  const origin = req.get('origin');
+  const same = origin === `${req.protocol}://${req.get('host')}`;
+  const local = process.env.NODE_ENV !== 'production' && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin || '');
+  const allowed = !origin || same || local || origin === process.env.FRONTEND_URL;
+  callback(null, { origin: allowed, credentials: true });
 }));
 
 // Parse JSON bodies
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '64kb', verify: (req, res, buffer) => { if (req.path === '/api/cal/webhook') req.rawBody = buffer; } }));
+app.use(express.urlencoded({ extended: false, limit: '16kb', parameterLimit: 30 }));
+app.use('/api/admin', (req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
 
 // Rate limiting — general API
 const generalLimiter = rateLimit({
@@ -101,11 +71,12 @@ app.use('/api/auth/', authLimiter);
 
 app.use((req, res, next) => {
   const start = Date.now();
+  const loggedPath = req.path.replace(/\/(s|reports|update)\/[^/]+/g, '/$1/[redacted]');
   res.on('finish', () => {
     const duration = Date.now() - start;
     const status = res.statusCode;
     const color = status >= 500 ? '\x1b[31m' : status >= 400 ? '\x1b[33m' : '\x1b[32m';
-    console.log(`  ${color}${req.method} ${req.originalUrl} → ${status}\x1b[0m (${duration}ms)`);
+    console.log(`  ${color}${req.method} ${loggedPath} → ${status}\x1b[0m (${duration}ms)`);
   });
   next();
 });
@@ -115,6 +86,8 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/cal', calRoutes);
+app.use('/api/admin', require('./routes/admin'));
+app.use(require('./routes/creators'));
 
 // Public config
 app.get('/api/config', (req, res) => {
@@ -145,25 +118,30 @@ app.use('/api/*', (req, res) => {
 
 /* ─── Frontend Static Assets (Production / Standalone) ─── */
 const frontendDir = path.join(__dirname, '..');
-app.use(express.static(frontendDir, {
+// Only the dedicated public directory is browsable. Legacy assets are explicitly allowed.
+app.use('/assets', express.static(path.join(frontendDir, 'public'), {
   maxAge: '1d',
   setHeaders: (res, filePath) => {
-    if (filePath.endsWith('.html')) {
+    // HTML, CSS and JS revalidate on every load (cheap 304 via ETag), so a deploy
+    // shows up immediately instead of after the 1-day cache expires
+    if (/\.(html|css|js)$/.test(filePath)) {
       res.setHeader('Cache-Control', 'no-cache');
     }
   },
 }));
 
-// Fallback to index.html for non-API routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(frontendDir, 'index.html'));
-});
+for (const asset of ['style.css', 'script.js', 'lib/tubes1.js', 'favicon.svg', 'favicon.ico', 'favicon.png', 'apple-touch-icon.png']) {
+  app.get('/' + asset, (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.sendFile(path.join(frontendDir, asset)); });
+}
+app.get(['/', '/index.html', '/build'], (req, res) => res.sendFile(path.join(frontendDir, 'index.html')));
+app.use(require('./routes/admin-pages'));
+app.use((req, res) => res.status(404).type('text').send('Page not found.'));
 
 /* ─── Error Handler ─── */
 
 app.use((err, req, res, next) => {
   console.error('  ✗ Unhandled error:', err.message);
-  res.status(500).json({
+  res.status(err.type === 'entity.too.large' ? 413 : err instanceof SyntaxError ? 400 : 500).json({
     error: 'Internal server error',
     message: 'Something went wrong. Please try again.',
   });
@@ -192,4 +170,5 @@ async function start() {
   });
 }
 
-start();
+if (require.main === module) start();
+module.exports = { app, start };

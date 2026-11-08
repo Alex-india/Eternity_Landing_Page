@@ -1014,6 +1014,43 @@
       };
     }
 
+    // Solid stroke on the word's horizontal centre line nearest its centre, in glyph
+    // units (same space as `bounds`/`center`). Zooming here makes ETERNITY grow straight
+    // out from its middle and still end on solid white.
+    function inkAtWordCentre() {
+      const pad = 4;
+      const w = Math.ceil(bounds.width) + pad * 2;
+      const h = Math.ceil(bounds.height) + pad * 2;
+      const c = document.createElement('canvas');
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext('2d', { willReadFrequently: true });
+      if (!ctx) return null;
+      ctx.font = `${weight} 100px ${fontFamily}`;
+      ctx.fontKerning = 'none';
+      ctx.fillStyle = '#000';
+      ctx.fillText(text, pad - bounds.x, pad - bounds.y);
+
+      const row = Math.round(pad + center.y - bounds.y);
+      const px = ctx.getImageData(0, row, w, 1).data;
+      let best = null;
+      let runStart = -1;
+      for (let x = 0; x <= w; x++) {
+        const filled = x < w && px[x * 4 + 3] > 128;
+        if (filled && runStart < 0) runStart = x;
+        if (!filled && runStart >= 0) {
+          const mid = (runStart + x - 1) / 2;
+          const half = (x - runStart) / 2;
+          const gx = mid - pad + bounds.x;
+          if (half >= 4 && (!best || Math.abs(gx - center.x) < Math.abs(best.x - center.x))) {
+            best = { x: gx, y: center.y, radius: half };
+          }
+          runStart = -1;
+        }
+      }
+      return best;
+    }
+
     function readInk() {
       if (!context) return false;
       const scanFont = `${weight} 300px ${fontFamily}`;
@@ -1065,8 +1102,16 @@
         });
       }
 
-      // Default target: letter 'R' (index 3) near optical center
-      const defaultLetter = letters[3] || letters[0];
+      // Default target: letter 'R' (index 3) near optical center. On touch screens, zoom
+      // into the ink point closest to the word's centre so the word grows in place
+      // instead of drifting upward toward the R's bowl.
+      let defaultLetter = letters[3] || letters[0];
+      if (window.matchMedia('(hover: none), (pointer: coarse)').matches) {
+        const centreInk = inkAtWordCentre();
+        if (centreInk) {
+          defaultLetter = { ...defaultLetter, ink: centreInk };
+        }
+      }
       currentTargetLetter = defaultLetter;
       target = defaultLetter.ink;
 
@@ -1131,7 +1176,11 @@
     }
 
     // Cursor tracking: Select the hovered letter, or nearest letter if not directly over one
+    const isTouchScreen = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+
     function updateHover(clientX, clientY) {
+      // Phones emit a synthetic mousemove on tap; keep the centred zoom target there
+      if (isTouchScreen) return;
       if (currentProgress > 0.05 || letters.length === 0) return;
       if (typeof clientX !== 'number' || typeof clientY !== 'number') return;
 
@@ -1251,7 +1300,11 @@
         // On mobile the stage is pinned for exactly (track height - stage height) of scroll
         const scrollY = window.scrollY || window.pageYOffset || 0;
         const travel = track.offsetHeight - stage.offsetHeight;
-        targetProgress = travel > 0 ? Math.max(0, Math.min(1, scrollY / travel)) : 0;
+        const raw = travel > 0 ? Math.max(0, Math.min(1, scrollY / travel)) : 0;
+        // The screen is already solid white by ~2/3 of the zoom curve, so on mobile
+        // spread only the visible part across the pin; otherwise the stage sits on
+        // plain white for the last half of the scroll and feels stuck
+        targetProgress = raw * 0.49;
       }
 
       if (immediate) {
