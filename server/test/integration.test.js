@@ -9,7 +9,7 @@ const databaseURL = process.env.TEST_DATABASE_URL;
 test('owner security and creator onboarding against isolated PostgreSQL', { skip: !databaseURL }, async (t) => {
   const database = new URL(databaseURL);
   assert.ok(['127.0.0.1', 'localhost'].includes(database.hostname) && database.pathname === '/eternity_creator_test', 'Tests require a dedicated localhost database named eternity_creator_test.');
-  Object.assign(process.env, { DATABASE_URL: databaseURL, DATABASE_SSL: 'false', NODE_ENV: 'test', JWT_SECRET: crypto.randomBytes(40).toString('hex'), OWNER_EMAIL: 'owner@example.test', CREATOR_WHATSAPP_NUMBER: '919999999999', CREATOR_EMAIL_ENABLED: 'false', CAL_WEBHOOK_SECRET: 'test-webhook-secret', ALLOW_DEV_SIGNUP: 'false' });
+  Object.assign(process.env, { DATABASE_URL: databaseURL, DATABASE_SSL: 'false', NODE_ENV: 'test', JWT_SECRET: crypto.randomBytes(40).toString('hex'), OWNER_EMAIL: 'owner@example.test', CREATOR_WHATSAPP_NUMBER: '919999999999', CREATOR_EMAIL_ENABLED: 'false', NOTIFICATIONS_ENABLED: 'false', CAL_WEBHOOK_SECRET: 'test-webhook-secret', ALLOW_DEV_SIGNUP: 'false' });
   const { query, pool } = require('../db/connection');
   const { runMigrations } = require('../db/migrate');
   const { setupOwner } = require('../db/setup-owner');
@@ -91,6 +91,89 @@ test('owner security and creator onboarding against isolated PostgreSQL', { skip
     const html = await thanks.text(); assert.ok(html.includes(encodeURIComponent('as @' + handle))); assert.ok(html.includes('https://wa.me/919999999999')); assert.ok(!result.headers.get('location').includes(handle));
     assert.equal(thanks.headers.get('cache-control'), 'no-store'); assert.ok(thanks.headers.get('x-robots-tag').includes('noindex'));
   });
+  await t.test('owner notifications never block signup; duplicates/spam do not notify; burst and daily jobs are persistent and idempotent', async () => {
+    const { notifyOwner, runScheduledNotifications, sendTestNotification } = require('../services/notifications');
+    await query('DELETE FROM owner_notification_events'); await query('DELETE FROM owner_notification_deliveries');
+    const previous = { NOTIFICATIONS_ENABLED: process.env.NOTIFICATIONS_ENABLED, ADMIN_BASE_URL: process.env.ADMIN_BASE_URL, BREVO_API_KEY: process.env.BREVO_API_KEY, BREVO_SENDER_EMAIL: process.env.BREVO_SENDER_EMAIL, NOTIFY_HOURLY_LIMIT: process.env.NOTIFY_HOURLY_LIMIT };
+    Object.assign(process.env, { NOTIFICATIONS_ENABLED: 'true', ADMIN_BASE_URL: base, BREVO_API_KEY: 'test-notification-secret', BREVO_SENDER_EMAIL: 'verified@example.test', NOTIFY_HOURLY_LIMIT: '2' });
+    app.set('trust proxy', 1);
+    const captured = []; let releaseSend, started;
+    const began = new Promise((resolve) => { started = resolve; });
+    const waitFor = async (predicate) => { for (let attempt = 0; attempt < 100; attempt++) { if (await predicate()) return; await new Promise((resolve) => setTimeout(resolve, 20)); } throw new Error('Timed out waiting for background notification'); };
+    global.fetch = async (url, options) => {
+      if (!String(url).startsWith('https://api.brevo.com/')) return originalFetch(url, options);
+      captured.push(JSON.parse(options.body)); started(); return new Promise((resolve) => { releaseSend = resolve; });
+    };
+    const headers = { Cookie: cookie, 'X-CSRF-Token': csrf, 'Content-Type': 'application/json' };
+    const notifiedHandle = 'notified_' + suffix;
+    try {
+      const result = await Promise.race([request('/api/creators', json(await fields({ instagramHandle: notifiedHandle }), { 'X-Forwarded-For': '192.0.2.19' })), new Promise((_, reject) => setTimeout(() => reject(new Error('Signup blocked on Brevo')), 1500))]);
+      assert.equal(result.status, 200);
+      await Promise.race([began, new Promise((_, reject) => setTimeout(() => reject(new Error('Notification did not start')), 1500))]);
+      const ownerID = (await query('SELECT id FROM creators WHERE instagram_handle = $1', [notifiedHandle])).rows[0].id;
+      assert.ok(captured[0].subject.startsWith('New creator: @' + notifiedHandle));
+      assert.equal(captured[0].sender.email, 'verified@example.test'); assert.equal(captured[0].to[0].email, 'owner@example.test');
+      assert.ok(!captured[0].textContent.includes('919999999999')); assert.ok(!captured[0].htmlContent.includes('creator-' + suffix + '@'));
+      releaseSend(new Response('{"message":"simulated failure"}', { status: 503 })); releaseSend = null;
+      await waitFor(async () => (await query('SELECT status FROM owner_notification_deliveries WHERE delivery_key = $1', ['creator.joined:' + ownerID])).rows[0]?.status === 'failed');
+      global.fetch = async (url, options) => {
+        if (!String(url).startsWith('https://api.brevo.com/')) return originalFetch(url, options);
+        captured.push(JSON.parse(options.body)); return new Response('{"messageId":"test-only"}', { status: 201 });
+      };
+      const post = async (body) => request('/api/creators', json(await fields(body), { 'X-Forwarded-For': '192.0.2.19' }));
+      assert.equal((await post({ instagramHandle: '@' + notifiedHandle.toUpperCase() })).status, 200);
+      assert.equal((await post({ consent: false })).status, 400);
+      assert.equal((await post({ companyWebsite: 'spam.example' })).status, 400);
+      for (let index = 0; index < 4; index++) assert.equal((await post({ instagramHandle: notifiedHandle })).status, 200);
+      assert.equal((await post({ instagramHandle: 'blocked_' + suffix })).status, 429);
+      assert.equal(Number((await query('SELECT COUNT(*) FROM owner_notification_events')).rows[0].count), 1);
+      assert.equal(captured.length, 1);
+      assert.equal((await notifyOwner({ type: 'creator.joined', creatorId: creatorID })).status, 'sent');
+      const overflowID = crypto.randomUUID();
+      const clone = async (id, name, source, created) => query(`INSERT INTO creators (id,full_name,instagram_handle,niche,follower_count,average_reel_views,country,rate_per_reel,whatsapp,email,source,consent_at,consent_version,created_at)
+        SELECT $1,full_name,$2,niche,follower_count,average_reel_views,country,rate_per_reel,whatsapp,email,$3,consent_at,consent_version,$4 FROM creators WHERE id = $5`, [id, name, source, created, creatorID]);
+      await clone(overflowID, 'overflow_' + suffix, 'burst-source', new Date());
+      const overflow = await Promise.all([notifyOwner({ type: 'creator.joined', creatorId: overflowID }), notifyOwner({ type: 'creator.joined', creatorId: overflowID })]);
+      assert.deepEqual(overflow.map((row) => row.status).sort(), ['duplicate', 'queued-for-summary']);
+      assert.equal(captured.length, 2);
+      await query("UPDATE owner_notification_deliveries SET last_attempt_at = NOW() - INTERVAL '6 minutes' WHERE delivery_key = $1", ['creator.joined:' + ownerID]);
+      const later = new Date(Date.now() + 2 * 60 * 60 * 1000);
+      await runScheduledNotifications(later); await runScheduledNotifications(later);
+      assert.equal(captured.filter((row) => row.subject.includes('more creators this hour')).length, 1);
+      assert.equal((await query('SELECT status FROM owner_notification_deliveries WHERE delivery_key = $1', ['creator.joined:' + ownerID])).rows[0].status, 'sent');
+      const priorDigest = Number((await query("SELECT COUNT(*) FROM creators WHERE created_at >= '2029-12-31T14:30:00Z' AND created_at < '2030-01-01T14:30:00Z'")).rows[0].count);
+      const priorSource = Number((await query("SELECT COUNT(*) FROM creators WHERE source = 'digest-source' AND created_at >= '2029-12-31T14:30:00Z' AND created_at < '2030-01-01T14:30:00Z'")).rows[0].count);
+      await clone(crypto.randomUUID(), 'digest_a_' + suffix, 'digest-source', '2030-01-01T13:00:00Z');
+      await clone(crypto.randomUUID(), 'digest_b_' + suffix, 'digest-source', '2030-01-01T13:01:00Z');
+      const beforeDigest = captured.length;
+      await runScheduledNotifications(new Date('2030-01-01T14:35:00Z'));
+      await runScheduledNotifications(new Date('2030-01-01T14:40:00Z'));
+      const digest = captured.slice(beforeDigest); assert.equal(digest.length, 1); assert.ok(digest[0].subject.includes((priorDigest + 2) + ' new creators')); assert.ok(digest[0].textContent.includes('digest-source: ' + (priorSource + 2))); assert.ok(digest[0].textContent.includes('digest_a_' + suffix));
+      const beforeEmpty = captured.length; await runScheduledNotifications(new Date('2031-01-01T14:35:00Z')); assert.equal(captured.length, beforeEmpty);
+      assert.equal((await request('/api/admin/notifications/test', json({}))).status, 401);
+      assert.equal((await request('/api/admin/notifications/test', { method: 'POST', headers: { ...headers, 'X-CSRF-Token': '' }, body: '{}' })).status, 403);
+      assert.equal((await request('/api/admin/notifications/test', { method: 'POST', headers, body: '{}' })).status, 200);
+      const beforeBudget = captured.length;
+      await query("INSERT INTO owner_notification_deliveries (delivery_key,status,attempts,last_attempt_at) VALUES ('budget-fixture','sent',200,NOW())");
+      try { assert.equal((await sendTestNotification()).status, 'daily-budget'); assert.equal(captured.length, beforeBudget); }
+      finally { await query("DELETE FROM owner_notification_deliveries WHERE delivery_key = 'budget-fixture'"); }
+      const warnings = [], originalWarn = console.warn;
+      console.warn = (text) => warnings.push(text);
+      global.fetch = async (url, options) => {
+        if (!String(url).startsWith('https://api.brevo.com/')) return originalFetch(url, options);
+        assert.ok(options.signal instanceof AbortSignal);
+        return new Promise((resolve, reject) => options.signal.addEventListener('abort', () => reject(new Error('provider echoed ' + process.env.BREVO_API_KEY)), { once: true }));
+      };
+      try {
+        const beganAt = Date.now(); assert.equal((await sendTestNotification()).status, 'failed');
+        assert.ok(Date.now() - beganAt < 5000); assert.ok(warnings.length); assert.ok(!warnings.join(' ').includes(process.env.BREVO_API_KEY));
+      } finally { console.warn = originalWarn; }
+    } finally {
+      if (releaseSend) releaseSend(new Response('{}', { status: 503 }));
+      global.fetch = originalFetch; app.set('trust proxy', false);
+      for (const [key, value] of Object.entries(previous)) { if (value === undefined) delete process.env[key]; else process.env[key] = value; }
+    }
+  });
   await t.test('handle variants cannot duplicate or overwrite a creator, including concurrent requests', async () => {
     const body = await fields({ instagramHandle: `https://www.instagram.com/${handle.toUpperCase()}/`, fullName: 'Attempted overwrite' });
     const results = await Promise.all([request('/api/creators', json(body)), request('/api/creators', json(body))]);
@@ -124,6 +207,11 @@ test('owner security and creator onboarding against isolated PostgreSQL', { skip
     assert.equal((await patch({ ...body, status: 'active' })).status, 200);
     const creator = (await query('SELECT * FROM creators WHERE id = $1', [creatorID])).rows[0]; assert.equal(creator.status, 'active'); assert.equal(creator.quality_score, 85); assert.ok(creator.verified_at);
     const injection = await request('/api/admin/creators?q=' + encodeURIComponent("' OR 1=1 --"), { headers }); assert.equal((await injection.json()).total, 0);
+    const ranges = await request('/api/admin/creators?q=' + handle + '&country=india&viewsMin=8000&viewsMax=9000&followersMin=10000&rateMax=2600&qualityMin=80&sort=quality', { headers });
+    assert.equal(ranges.status, 200); assert.ok((await ranges.json()).creators.some((row) => row.id === creatorID));
+    const none = await request('/api/admin/creators?q=' + handle + '&rateMax=100', { headers }); assert.equal((await none.json()).total, 0);
+    assert.equal((await request('/api/admin/creators?rateMin=1000&rateMax=100', { headers })).status, 400);
+    assert.equal((await request('/api/admin/creators?sort=' + encodeURIComponent('1; DROP TABLE creators'), { headers })).status, 400);
   });
   await t.test('webhook rejects missing/tampered signatures, accepts the signature of exact raw bytes', async () => {
     const body = '{ "triggerEvent": "BOOKING_CREATED", "payload": { "uid": "test-' + suffix + '", "attendees": [{"name":"Test", "email":"test@example.test"}] } }';

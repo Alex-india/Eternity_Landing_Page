@@ -1,25 +1,17 @@
 const express = require('express');
 const { query } = require('../db/connection');
 const { NICHES } = require('../creator-config');
+const { creatorFilters } = require('../creator-filters');
 const router = express.Router();
 router.get('/', async (req, res, next) => {
-  const params = [];
-  const conditions = [];
-  const add = (condition, value) => { params.push(value); conditions.push(condition.replace('?', '$' + params.length)); };
-  const search = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 120) : '';
-  if (search) {
-    params.push('%' + search.replace(/[\\%_]/g, '\\$&') + '%');
-    conditions.push(`(full_name ILIKE $${params.length} OR instagram_handle ILIKE $${params.length} OR email ILIKE $${params.length})`);
-  }
-  if (['pending', 'verified', 'active'].includes(req.query.status)) add('status = ?', req.query.status);
-  if (NICHES.includes(req.query.niche)) add('niche = ?', req.query.niche);
-  if (typeof req.query.source === 'string' && req.query.source.length <= 100 && req.query.source) add('source = ?', req.query.source);
-  const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
+  let filters;
+  try { filters = creatorFilters(req.query); } catch (err) { return res.status(400).json({ message: err.message }); }
+  const { params, where, order } = filters;
   const page = Math.min(100000, Math.max(1, parseInt(req.query.page, 10) || 1));
   const limit = 25;
   try {
     const count = await query(`SELECT COUNT(*) FROM creators ${where}`, params);
-    const rows = await query(`SELECT * FROM creators ${where} ORDER BY created_at DESC, id LIMIT $${params.length + 1} OFFSET $${params.length + 2}`, [...params, limit, (page - 1) * limit]);
+    const rows = await query(`SELECT * FROM creators ${where} ORDER BY ${order} LIMIT $${params.length + 1} OFFSET $${params.length + 2}`, [...params, limit, (page - 1) * limit]);
     res.json({ creators: rows.rows, page, total: Number(count.rows[0].count), limit, niches: NICHES });
   } catch (err) { next(err); }
 });

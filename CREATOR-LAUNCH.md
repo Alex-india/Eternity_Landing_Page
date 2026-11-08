@@ -5,6 +5,10 @@ deals, the ledger, reports, uploads, and expiring update links remain staged.
 Existing development content remains at `/`; `/build` is currently an alias so
 the small post-onboarding website offer works. The split homepage comes later.
 
+Owner email notifications and additional creator filters are documented in
+[OWNER-NOTIFICATIONS.md](OWNER-NOTIFICATIONS.md), including the separate cron worker,
+notification budget, setup/test steps and delivery limitations.
+
 ## Required configuration
 
 Copy `server/.env.example` to `server/.env` for local work. Render environment

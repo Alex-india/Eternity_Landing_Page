@@ -31,15 +31,16 @@ function formatDateTime(dateInput) {
 /**
  * Core Brevo API client via native fetch.
  */
-async function sendBrevoEmail({ to, subject, htmlContent, textContent, replyTo }) {
+async function sendBrevoEmail({ to, subject, htmlContent, textContent, replyTo, timeoutMs = 6000, quiet = false }) {
   const apiKey = process.env.BREVO_API_KEY;
 
   if (!apiKey) {
-    console.warn('[email] BREVO_API_KEY is not configured. Email skipped.');
+    if (!quiet) console.warn('[email] BREVO_API_KEY is not configured. Email skipped.');
     return { success: false, skipped: true, reason: 'BREVO_API_KEY missing' };
   }
 
   const senderEmail = process.env.BREVO_SENDER_EMAIL || 'harshraj1603@gmail.com';
+  const redact = (value) => String(value || '').split(apiKey).join('[redacted]');
   const senderName = process.env.BREVO_SENDER_NAME || 'Aryan Raj | ETERNITY';
 
   const recipients = Array.isArray(to)
@@ -65,7 +66,7 @@ async function sendBrevoEmail({ to, subject, htmlContent, textContent, replyTo }
 
   try {
     const response = await fetch(BREVO_API_URL, {
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(timeoutMs),
       method: 'POST',
       headers: {
         'api-key': apiKey,
@@ -78,26 +79,26 @@ async function sendBrevoEmail({ to, subject, htmlContent, textContent, replyTo }
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      console.error(`[email] Brevo API error (${response.status}):`, data.message || JSON.stringify(data));
+      if (!quiet) console.error(`[email] Brevo API error (${response.status}):`, redact(data.message || JSON.stringify(data)));
       return {
         success: false,
         status: response.status,
-        error: data.message || 'Failed to send email via Brevo',
-        code: data.code,
+        error: redact(data.message || 'Failed to send email via Brevo'),
+        code: data.code ? redact(data.code) : undefined,
         ipRestricted: Boolean(data.message && data.message.includes('authorised_ips')),
       };
     }
 
-    console.log(`[email] Delivered via Brevo to ${recipients.map((r) => r.email).join(', ')} [${data.messageId || 'ok'}]`);
+    if (!quiet) console.log(`[email] Delivered via Brevo to ${recipients.map((r) => r.email).join(', ')} [${data.messageId || 'ok'}]`);
     return {
       success: true,
       messageId: data.messageId,
     };
   } catch (err) {
-    console.error('[email] Network error sending email:', err.message);
+    if (!quiet) console.error('[email] Network error sending email:', redact(err.message));
     return {
       success: false,
-      error: err.message,
+      error: redact(err.message),
     };
   }
 }

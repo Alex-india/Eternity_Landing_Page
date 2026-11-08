@@ -26,6 +26,14 @@ router.post('/login', loginLimiter, sameOrigin, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 router.use(requireOwner);
+const testNotificationLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 3, standardHeaders: true, legacyHeaders: false, message: { message: 'Test email limit reached. Try again in an hour.' } });
+router.post('/notifications/test', testNotificationLimiter, sameOrigin, async (req, res, next) => {
+  try {
+    const result = await require('../services/notifications').sendTestNotification();
+    const messages = { sent: 'Test email accepted by Brevo. Check your inbox and spam folder.', disabled: 'Set NOTIFICATIONS_ENABLED=true before testing.', misconfigured: 'Check OWNER_EMAIL, ADMIN_BASE_URL, BREVO_API_KEY and your configured Brevo sender.', failed: 'Brevo did not accept the test email. Check your sender/key settings and retry later.', 'daily-budget': 'Owner notification daily safety budget reached. Try later.' };
+    res.status(result.status === 'sent' ? 200 : 409).json({ status: result.status, message: messages[result.status] || 'Test email is not available right now.' });
+  } catch (err) { next(err); }
+});
 router.use('/creators', require('./admin-creators'));
 router.get('/session', (req, res) => res.json({ email: req.owner.email, csrfToken: req.user.csrf }));
 router.post('/logout', sameOrigin, async (req, res, next) => {

@@ -51,6 +51,8 @@
     try {
       const params = new URLSearchParams(new FormData(filters)); params.set('page', String(page));
       const data = await api('/creators?' + params.toString()); creators = data.creators;
+      const active = [...params.entries()].filter(([key, value]) => value && key !== 'page' && !(key === 'sort' && value === 'newest')).length;
+      document.getElementById('active-filter-count').textContent = active ? active + ' active filter' + (active === 1 ? '' : 's') : 'Views, rates, quality & dates';
       if (!initialized) { data.niches.forEach((niche) => { const option = node('option', niche); option.value = niche; document.getElementById('niche-filter').append(option); }); initialized = true; }
       rows.replaceChildren();
       for (const creator of creators) {
@@ -69,6 +71,11 @@
     finally { loading = false; }
   }
   filters.addEventListener('submit', (event) => { event.preventDefault(); if (loading) return; page = 1; editor.hidden = true; load(); });
+  filters.addEventListener('reset', (event) => {
+    event.preventDefault(); if (loading) return;
+    for (const control of filters.elements) { if (control.tagName === 'SELECT') control.selectedIndex = 0; else if (control.tagName === 'INPUT') control.value = ''; }
+    page = 1; editor.hidden = true; load();
+  });
   document.getElementById('previous').addEventListener('click', () => { if (!loading) { page--; editor.hidden = true; load(); } });
   document.getElementById('next').addEventListener('click', () => { if (!loading) { page++; editor.hidden = true; load(); } });
   document.getElementById('close-editor').addEventListener('click', () => { editor.hidden = true; });
@@ -86,6 +93,13 @@
   document.getElementById('logout').addEventListener('click', async () => {
     try { await api('/logout', { method: 'POST', body: '{}' }); window.location.assign('/admin/login'); }
     catch (err) { message.textContent = err.message; }
+  });
+  document.getElementById('test-notification').addEventListener('click', async (event) => {
+    const button = event.currentTarget, feedback = document.getElementById('notification-message');
+    button.disabled = true; feedback.textContent = 'Sending test notification…';
+    try { const result = await api('/notifications/test', { method: 'POST', body: '{}' }); feedback.textContent = result.message; }
+    catch (err) { feedback.textContent = err.message; }
+    finally { button.disabled = false; }
   });
   api('/session').then((session) => { csrfToken = session.csrfToken; return load(); }).catch((err) => { message.textContent = err.message; });
 })();

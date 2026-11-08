@@ -9,6 +9,7 @@
     "dev": "node --watch index.js",
     "migrate": "node db/migrate.js",
     "owner:setup": "node db/setup-owner.js",
+    "notifications:run": "node jobs/notifications.js",
     "test": "node --test test/*.test.js"
   },
   "dependencies": {

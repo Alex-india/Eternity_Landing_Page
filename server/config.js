@@ -2,6 +2,7 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env'), quiet: true });
 const ownerEmail = () => (process.env.OWNER_EMAIL || '').trim().toLowerCase();
 function validateEnv() {
+  require('./services/notification-config').warnNotificationConfig();
   if (!process.env.DATABASE_URL || !process.env.JWT_SECRET) throw new Error('DATABASE_URL and JWT_SECRET are required. See server/.env.example.');
   if (process.env.NODE_ENV === 'production') {
     if (!/^[1-9]\d{7,14}$/.test(process.env.CREATOR_WHATSAPP_NUMBER || '')) throw new Error('Set CREATOR_WHATSAPP_NUMBER to digits only, including country code.');

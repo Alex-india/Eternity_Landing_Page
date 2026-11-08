@@ -8,6 +8,7 @@ const { validateCreator } = require('../creator-validation');
 const { CONSENT_VERSION, agencyName, whatsappNumber, whatsappLink } = require('../creator-config');
 const { renderForm, renderThanks, validFormToken, escape } = require('../views/creators');
 const { sendBrevoEmail } = require('../services/email');
+const { notifyOwner } = require('../services/notifications');
 const router = express.Router();
 const receiptCookie = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/creators/thanks', maxAge: 15 * 60 * 1000 };
 const submitLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 8, standardHeaders: true, legacyHeaders: false,
@@ -43,6 +44,8 @@ async function submit(req, res, next) {
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,NOW(),$12,$13)
       ON CONFLICT (instagram_handle) DO NOTHING RETURNING id`,
     [crypto.randomUUID(), data.fullName, data.instagramHandle, data.niche, data.followerCount, data.averageReelViews, data.country, data.ratePerReel, data.whatsapp, data.email, data.source || null, CONSENT_VERSION, emailEnabled ? 'pending' : 'disabled']);
+    // INSERT is autocommitted before this runs. Owner mail never blocks the response.
+    if (result.rows.length) void notifyOwner({ type: 'creator.joined', creatorId: result.rows[0].id }).catch(() => console.warn('[notifications] Owner notification failed; signup is saved.'));
     // Duplicate submissions neither overwrite profiles nor trigger repeat emails.
     if (result.rows.length && emailEnabled) {
       let sent = false;

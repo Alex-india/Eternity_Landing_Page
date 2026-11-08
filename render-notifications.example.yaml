@@ -1,0 +1,30 @@
+# Reference only. This file does not create a service automatically.
+# A native Render cron service has a $1/month minimum. Copy into your Blueprint
+# only when ready to provision it, or create the service in the dashboard.
+services:
+  - type: cron
+    name: eternity-owner-notifications
+    runtime: node
+    region: oregon
+    schedule: "*/5 * * * *"
+    buildCommand: cd server && npm install
+    startCommand: node server/jobs/notifications.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NOTIFICATIONS_ENABLED
+        value: "true"
+      - key: NOTIFY_HOURLY_LIMIT
+        value: "20"
+      - key: DATABASE_URL
+        sync: false
+      - key: OWNER_EMAIL
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
+        sync: false
+      - key: BREVO_SENDER_NAME
+        sync: false
+      - key: ADMIN_BASE_URL
+        sync: false
