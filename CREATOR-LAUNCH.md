@@ -9,6 +9,14 @@ Owner email notifications and additional creator filters are documented in
 [OWNER-NOTIFICATIONS.md](OWNER-NOTIFICATIONS.md), including the separate cron worker,
 notification budget, setup/test steps and delivery limitations.
 
+The creator admin list also has a red **Delete** action beside Review. It asks for
+confirmation with the creator's name and handle before permanently removing that
+profile and its queued notification snapshot. Owner authorization, CSRF protection
+and a matching handle are required. There is no bulk delete or undo. Delivery-only
+metadata is retained for email-budget accounting; it contains no profile/contact
+fields. To test, use a disposable profile: cancel once and verify it remains, then
+confirm deletion and verify it stays absent after refreshing the list.
+
 ## Required configuration
 
 Copy `server/.env.example` to `server/.env` for local work. Render environment

@@ -18,6 +18,8 @@ async function deliver(key, content) {
   const config = notificationConfig();
   if (!config.ready) return { status: config.enabled ? 'misconfigured' : 'disabled' };
   const claim = await locked(async (client) => {
+    if (Object.keys(EVENT_HANDLERS).some((type) => key.startsWith(type + ':'))
+        && !(await client.query('SELECT event_key FROM owner_notification_events WHERE event_key = $1', [key])).rows.length) return 'cancelled';
     await client.query('INSERT INTO owner_notification_deliveries (delivery_key) VALUES ($1) ON CONFLICT DO NOTHING', [key]);
     const row = (await client.query('SELECT *, NOW() AS db_now FROM owner_notification_deliveries WHERE delivery_key = $1 FOR UPDATE', [key])).rows[0];
     if (row.status === 'sent') return 'already-sent';
@@ -43,9 +45,9 @@ const CREATOR_COLUMNS = 'id, instagram_handle, niche, follower_count, average_re
 // Add a loader, renderer and summary line here for another event; delivery/limits stay shared.
 const EVENT_HANDLERS = {
   'creator.joined': {
-    async load(event) {
+    async load(event, client) {
       if (!/^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i.test(event.creatorId || '')) return null;
-      const row = (await query(`SELECT ${CREATOR_COLUMNS} FROM creators WHERE id = $1`, [event.creatorId])).rows[0];
+      const row = (await client.query(`SELECT ${CREATOR_COLUMNS} FROM creators WHERE id = $1`, [event.creatorId])).rows[0];
       return row ? { id: row.id, payload: creatorSnapshot(row), occurredAt: row.created_at } : null;
     },
     render: joinedMail,
@@ -58,10 +60,11 @@ async function notifyOwner(event) {
     if (!config.ready) { if (config.enabled) warning('Owner email configuration is incomplete'); return { status: config.enabled ? 'misconfigured' : 'disabled' }; }
     if (!event || !Object.hasOwn(EVENT_HANDLERS, event.type)) return { status: 'unsupported-event' };
     const handler = EVENT_HANDLERS[event.type];
-    const record = await handler.load(event);
-    if (!record) return { status: 'missing-record' };
-    const key = event.type + ':' + record.id;
+    let record, key;
     const mode = await locked(async (client) => {
+      record = await handler.load(event, client);
+      if (!record) return 'missing-record';
+      key = event.type + ':' + record.id;
       if ((await client.query('SELECT event_key FROM owner_notification_events WHERE event_key = $1', [key])).rows.length) return 'duplicate';
       const hour = (await client.query("SELECT date_trunc('hour', NOW() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC' AS hour")).rows[0].hour;
       const count = Number((await client.query("SELECT COUNT(*) FROM owner_notification_events WHERE hour_start = $1 AND mode = 'individual'", [hour])).rows[0].count);
@@ -69,7 +72,7 @@ async function notifyOwner(event) {
       await client.query('INSERT INTO owner_notification_events (event_key, event_type, payload, occurred_at, hour_start, mode) VALUES ($1,$2,$3,$4,$5,$6)', [key, event.type, JSON.stringify(record.payload), record.occurredAt, hour, selected]);
       return selected;
     });
-    if (mode !== 'individual') return { status: mode === 'summary' ? 'queued-for-summary' : 'duplicate' };
+    if (mode !== 'individual') return { status: mode === 'summary' ? 'queued-for-summary' : mode };
     return await deliver(key, handler.render(record.payload, config.adminURL));
   } catch { warning('Could not queue or deliver owner email'); return { status: 'failed' }; }
 }

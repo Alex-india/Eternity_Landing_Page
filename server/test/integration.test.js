@@ -248,6 +248,37 @@ test('owner security and creator onboarding against isolated PostgreSQL', { skip
       assert.equal((await request('/api/cal/webhook', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Cal-Signature-256': signature }, body })).status, 200);
     } finally { if (previousKey !== undefined) process.env.BREVO_API_KEY = previousKey; }
   });
+  await t.test('creator deletion is owner-only, confirmed by handle, atomic and removes queued profile data', async () => {
+    const id = crypto.randomUUID(), keepID = crypto.randomUUID(), handleToDelete = 'delete_' + suffix;
+    for (const [recordID, instagramHandle] of [[id, handleToDelete], [keepID, 'keep_' + suffix]]) {
+      await query(`INSERT INTO creators (id,full_name,instagram_handle,niche,follower_count,average_reel_views,country,rate_per_reel,whatsapp,email,source,consent_at,consent_version)
+        SELECT $1,full_name,$2,niche,follower_count,average_reel_views,country,rate_per_reel,whatsapp,email,source,consent_at,consent_version FROM creators WHERE id = $3`, [recordID, instagramHandle, creatorID]);
+    }
+    const key = 'creator.joined:' + id;
+    await query("INSERT INTO owner_notification_events (event_key,event_type,payload,occurred_at,hour_start,mode) VALUES ($1,'creator.joined',$2,NOW(),date_trunc('hour',NOW()),'summary')", [key, JSON.stringify({ handle: handleToDelete })]);
+    await query("INSERT INTO owner_notification_deliveries (delivery_key,status,attempts,last_attempt_at) VALUES ($1,'sent',1,NOW())", [key]);
+    const headers = { Cookie: cookie, 'X-CSRF-Token': csrf, 'Content-Type': 'application/json' };
+    const remove = (body, extra = headers, recordID = id) => request('/api/admin/creators/' + recordID, { method: 'DELETE', headers: extra, body: JSON.stringify(body) });
+    assert.equal((await remove({ instagramHandle: handleToDelete }, { 'Content-Type': 'application/json' })).status, 401);
+    assert.equal((await remove({ instagramHandle: handleToDelete }, { Authorization: 'Bearer ' + memberToken, 'Content-Type': 'application/json' })).status, 403);
+    assert.equal((await remove({ instagramHandle: handleToDelete }, { ...headers, 'X-CSRF-Token': '' })).status, 403);
+    assert.equal((await remove({})).status, 400);
+    assert.equal((await remove({ instagramHandle: handleToDelete }, headers, 'invalid-id')).status, 400);
+    assert.equal((await remove({ instagramHandle: 'wrong_handle' })).status, 409);
+    assert.equal((await query('SELECT id FROM creators WHERE id = $1', [id])).rows.length, 1);
+    assert.equal((await query('SELECT event_key FROM owner_notification_events WHERE event_key = $1', [key])).rows.length, 1);
+    assert.equal((await remove({ instagramHandle: handleToDelete })).status, 200);
+    assert.equal((await query('SELECT id FROM creators WHERE id = $1', [id])).rows.length, 0);
+    assert.equal((await query('SELECT event_key FROM owner_notification_events WHERE event_key = $1', [key])).rows.length, 0);
+    assert.equal((await query('SELECT delivery_key FROM owner_notification_deliveries WHERE delivery_key = $1', [key])).rows.length, 1);
+    assert.equal((await query('SELECT id FROM creators WHERE id = $1', [keepID])).rows.length, 1);
+    const listing = await request('/api/admin/creators?q=' + handleToDelete, { headers }); assert.equal((await listing.json()).total, 0);
+    assert.equal((await remove({ instagramHandle: handleToDelete })).status, 404);
+    const previous = { NOTIFICATIONS_ENABLED: process.env.NOTIFICATIONS_ENABLED, ADMIN_BASE_URL: process.env.ADMIN_BASE_URL, BREVO_API_KEY: process.env.BREVO_API_KEY, BREVO_SENDER_EMAIL: process.env.BREVO_SENDER_EMAIL };
+    Object.assign(process.env, { NOTIFICATIONS_ENABLED: 'true', ADMIN_BASE_URL: base, BREVO_API_KEY: 'test-only-key', BREVO_SENDER_EMAIL: 'verified@example.test' });
+    try { assert.equal((await require('../services/notifications').notifyOwner({ type: 'creator.joined', creatorId: id })).status, 'missing-record'); }
+    finally { for (const [setting, value] of Object.entries(previous)) { if (value === undefined) delete process.env[setting]; else process.env[setting] = value; } }
+  });
   await t.test('logout revokes the session server-side, including a copied cookie', async () => {
     const result = await request('/api/admin/logout', { method: 'POST', headers: { Cookie: cookie, 'X-CSRF-Token': csrf, 'Content-Type': 'application/json' }, body: '{}' });
     assert.equal(result.status, 200); assert.equal((await request('/api/admin/creators', { headers: { Cookie: cookie } })).status, 403);

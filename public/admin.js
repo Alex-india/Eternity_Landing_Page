@@ -25,7 +25,7 @@
   const editor = document.getElementById('creator-editor');
   const review = document.getElementById('review-form');
   const message = document.getElementById('list-message');
-  let page = 1, selectedId = '', creators = [], initialized = false, loading = false;
+  let page = 1, selectedId = '', creators = [], initialized = false, loading = false, deleting = false;
   const number = (value) => Number(value).toLocaleString('en-IN');
   function node(tag, text, className) { const element = document.createElement(tag); if (text !== undefined) element.textContent = text; if (className) element.className = className; return element; }
   function cell(row, title, subtitle) { const td = node('td'); td.append(node('strong', title)); if (subtitle !== undefined) td.append(node('small', subtitle)); row.append(td); return td; }
@@ -44,8 +44,26 @@
     document.getElementById('editor-title').focus();
     editor.scrollIntoView({ block: 'start' });
   }
+  async function deleteCreator(creator, button) {
+    if (loading || deleting) return;
+    if (!window.confirm(`Permanently delete ${creator.full_name} (@${creator.instagram_handle})?\n\nTheir profile and contact details will be removed. This cannot be undone.`)) return;
+    deleting = true;
+    button.disabled = true;
+    message.textContent = 'Deleting @' + creator.instagram_handle + '…';
+    try {
+      await api('/creators/' + creator.id, { method: 'DELETE', body: JSON.stringify({ instagramHandle: creator.instagram_handle }) });
+      if (selectedId === creator.id) { editor.hidden = true; selectedId = ''; review.reset(); }
+      // Return to the previous page when deleting the last row on this page.
+      if (creators.length === 1 && page > 1) page--;
+      button.closest('tr').remove();
+      creators = creators.filter((entry) => entry.id !== creator.id);
+      const refreshed = await load();
+      message.textContent = 'Deleted @' + creator.instagram_handle + '.' + (refreshed ? '' : ' Refresh the list to update the count.');
+    } catch (err) { message.textContent = err.message; }
+    finally { deleting = false; button.disabled = false; }
+  }
   async function load() {
-    if (loading) return;
+    if (loading) return false;
     loading = true; message.textContent = 'Loading…';
     document.getElementById('previous').disabled = true; document.getElementById('next').disabled = true;
     try {
@@ -61,26 +79,30 @@
         cell(row, number(creator.average_reel_views) + ' avg. views', number(creator.follower_count) + ' followers');
         cell(row, '₹' + number(creator.rate_per_reel), creator.rate_currency); cell(row, creator.source || 'Direct', new Date(creator.created_at).toLocaleDateString());
         const status = node('td'); status.append(node('span', creator.status, 'badge ' + creator.status), node('small', creator.quality_score === null ? 'Not scored' : creator.quality_score + '/100')); row.append(status);
-        const action = node('td'); const button = node('button', 'Review ↗', 'button secondary review-button'); button.type = 'button'; button.addEventListener('click', () => openReview(creator)); action.append(button); row.append(action); rows.append(row);
+        const action = node('td'), actions = node('div', undefined, 'row-actions');
+        const button = node('button', 'Review ↗', 'button secondary review-button'); button.type = 'button'; button.addEventListener('click', () => openReview(creator));
+        const remove = node('button', 'Delete', 'button danger review-button'); remove.type = 'button'; remove.setAttribute('aria-label', 'Delete @' + creator.instagram_handle); remove.addEventListener('click', () => deleteCreator(creator, remove));
+        actions.append(button, remove); action.append(actions); row.append(action); rows.append(row);
       }
       if (!creators.length) { const row = node('tr'); const empty = node('td', 'No creators match these filters yet.', 'empty'); empty.colSpan = 7; row.append(empty); rows.append(row); }
       document.getElementById('result-count').textContent = data.total ? `${(page - 1) * data.limit + 1}–${Math.min(page * data.limit, data.total)} of ${data.total} creators` : '0 creators';
       document.getElementById('previous').disabled = page <= 1; document.getElementById('next').disabled = page * data.limit >= data.total;
       message.textContent = '';
-    } catch (err) { message.textContent = err.message; }
+      return true;
+    } catch (err) { message.textContent = err.message; return false; }
     finally { loading = false; }
   }
-  filters.addEventListener('submit', (event) => { event.preventDefault(); if (loading) return; page = 1; editor.hidden = true; load(); });
+  filters.addEventListener('submit', (event) => { event.preventDefault(); if (loading || deleting) return; page = 1; editor.hidden = true; load(); });
   filters.addEventListener('reset', (event) => {
-    event.preventDefault(); if (loading) return;
+    event.preventDefault(); if (loading || deleting) return;
     for (const control of filters.elements) { if (control.tagName === 'SELECT') control.selectedIndex = 0; else if (control.tagName === 'INPUT') control.value = ''; }
     page = 1; editor.hidden = true; load();
   });
-  document.getElementById('previous').addEventListener('click', () => { if (!loading) { page--; editor.hidden = true; load(); } });
-  document.getElementById('next').addEventListener('click', () => { if (!loading) { page++; editor.hidden = true; load(); } });
+  document.getElementById('previous').addEventListener('click', () => { if (!loading && !deleting) { page--; editor.hidden = true; load(); } });
+  document.getElementById('next').addEventListener('click', () => { if (!loading && !deleting) { page++; editor.hidden = true; load(); } });
   document.getElementById('close-editor').addEventListener('click', () => { editor.hidden = true; });
   review.addEventListener('submit', async (event) => {
-    event.preventDefault(); const button = review.querySelector('button[type="submit"]'); button.disabled = true;
+    event.preventDefault(); if (deleting) return; const button = review.querySelector('button[type="submit"]'); button.disabled = true;
     const score = document.getElementById('quality-score').value;
     const feedback = document.getElementById('review-message');
     try {
