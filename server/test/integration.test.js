@@ -82,6 +82,31 @@ test('owner security and creator onboarding against isolated PostgreSQL', { skip
     assert.equal((await request('/creators', json(await fields({ companyWebsite: 'bot.example' })))).status, 400);
     assert.equal((await request('/creators', json(await fields({ formToken: 'forged' })))).status, 400);
   });
+  await t.test('native null/missing origins and public proxy origins save creators and appear in the owner list', async () => {
+    const previousURL = process.env.ADMIN_BASE_URL;
+    process.env.ADMIN_BASE_URL = 'https://creators.example.test';
+    app.set('trust proxy', 1);
+    const savedHandles = [];
+    const submitHTML = (body, extra = {}) => request('/creators', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Forwarded-For': '192.0.2.42', ...extra }, body: new URLSearchParams(body) });
+    try {
+      const cases = [{ Origin: 'null', 'Sec-Fetch-Site': 'same-origin' }, {}, { Origin: process.env.ADMIN_BASE_URL, 'X-Forwarded-Proto': 'https' }];
+      for (let index = 0; index < cases.length; index++) {
+        const instagramHandle = 'origin_' + suffix + '_' + index;
+        const response = await submitHTML(await fields({ instagramHandle, source: 'origin-regression' }), cases[index]);
+        assert.equal(response.status, 303); assert.equal(response.headers.get('location'), '/creators/thanks');
+        const stored = (await query('SELECT instagram_handle, source FROM creators WHERE instagram_handle = $1', [instagramHandle])).rows[0];
+        assert.equal(stored.instagram_handle, instagramHandle); assert.equal(stored.source, 'origin-regression'); savedHandles.push(instagramHandle);
+      }
+      const listing = await request('/api/admin/creators?q=origin_' + suffix, { headers: { Cookie: cookie } });
+      assert.equal(listing.status, 200); const listedHandles = (await listing.json()).creators.map((creator) => creator.instagram_handle);
+      savedHandles.forEach((handle) => assert.ok(listedHandles.includes(handle)));
+      const rejected = await submitHTML(await fields({ instagramHandle: 'rejected_' + suffix }), { Origin: 'https://evil.example.test' });
+      assert.equal(rejected.status, 403); assert.match(rejected.headers.get('content-type'), /text\/html/); assert.ok((await rejected.text()).includes('Test Creator'));
+      assert.equal((await query('SELECT id FROM creators WHERE instagram_handle = $1', ['rejected_' + suffix])).rows.length, 0);
+      assert.equal((await submitHTML(await fields({ formToken: 'forged' }), { Origin: 'null' })).status, 400);
+      assert.equal((await request('/creators')).headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
+    } finally { app.set('trust proxy', false); if (previousURL === undefined) delete process.env.ADMIN_BASE_URL; else process.env.ADMIN_BASE_URL = previousURL; }
+  });
   await t.test('normal HTML submission persists profile, attribution and consent, then confirms on WhatsApp', async () => {
     const result = await request('/creators', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Origin: base }, body: new URLSearchParams(await fields()) });
     assert.equal(result.status, 303); assert.equal(result.headers.get('location'), '/creators/thanks');

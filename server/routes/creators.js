@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const { query } = require('../db/connection');
-const { sameOrigin } = require('../middleware/auth');
+const { creatorOriginAllowed } = require('../creator-origin');
 const { validateCreator } = require('../creator-validation');
 const { CONSENT_VERSION, agencyName, whatsappNumber, whatsappLink } = require('../creator-config');
 const { renderForm, renderThanks, validFormToken, escape } = require('../views/creators');
@@ -15,7 +15,7 @@ const submitLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 8, standardHead
   handler: (req, res) => wantsJSON(req) ? res.status(429).json({ message: 'Too many submissions. Please try again in an hour.' }) : res.status(429).send(renderForm(req.body, {}, 'Too many submissions. Please try again in an hour.')) });
 function wantsJSON(req) { return req.is('application/json'); }
 router.use('/creators', (req, res, next) => {
-  res.set({ 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow', 'Referrer-Policy': 'no-referrer',
+  res.set({ 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow', 'Referrer-Policy': 'strict-origin-when-cross-origin',
     'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'" });
   next();
 });
@@ -34,6 +34,7 @@ async function submit(req, res, next) {
   const fail = (status, message, errors = {}) => wantsJSON(req) ? res.status(status).json({ message, errors }) : res.status(status).type('html').send(renderForm(req.body, errors, message));
   if (!whatsappNumber()) return fail(503, 'Applications are temporarily paused. Please check back soon.');
   if (!validFormToken(req.body.formToken)) return fail(400, 'This form has expired. Please review your details and submit again.');
+  if (!creatorOriginAllowed(req)) return fail(403, 'Please submit from the original creator page. Your details are still below.');
   if (req.body.companyWebsite) return fail(400, 'We could not accept this submission.');
   const { data, errors } = validateCreator(req.body);
   if (Object.keys(errors).length) return fail(400, 'Please check the highlighted fields.', errors);
@@ -66,5 +67,5 @@ async function submit(req, res, next) {
     return fail(503, 'We could not save your application right now. Your details are still below; please try again shortly.');
   }
 }
-router.post(['/creators', '/api/creators'], submitLimiter, sameOrigin, submit);
+router.post(['/creators', '/api/creators'], submitLimiter, submit);
 module.exports = router;
