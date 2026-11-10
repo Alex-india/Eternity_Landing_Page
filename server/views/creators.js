@@ -27,8 +27,8 @@ function renderForm(values = {}, errors = {}, generalError = '') {
   ${field('fullName', 'Full name', 'autocomplete="name" maxlength="120" placeholder="Your full name"')}
   ${field('instagramHandle', 'Instagram handle', 'autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="120" placeholder="@yourname"')}
   ${select}${field('country', 'Country you live in', 'autocomplete="country-name" maxlength="80" placeholder="India"')}
-  ${field('followerCount', 'Follower count', 'type="number" inputmode="numeric" min="0" max="2000000000" step="1" placeholder="e.g. 12000"')}
-  ${field('averageReelViews', 'Average reel views', 'type="number" inputmode="numeric" min="0" max="2000000000" step="1" placeholder="e.g. 8500"', 'Use the average of your recent reels.')}
+  ${field('followerCount', 'Follower count (full number)', 'type="number" inputmode="numeric" min="0" max="2000000000" step="1" placeholder="e.g. 49000"', 'Enter the full number, not thousands: 49K = 49000; 50K = 50000. Do not enter 49 or 50 for these counts.')}
+  ${field('averageReelViews', 'Average reel views (full number)', 'type="number" inputmode="numeric" min="0" max="2000000000" step="1" placeholder="e.g. 8500"', 'Use the average of your recent reels. Enter the full number: 8.5K = 8500.')}
   </div></section><section class="form-section"><div class="section-heading"><span>02</span><h2>Let’s talk collaborations</h2></div><div class="field-grid">
   ${field('ratePerReel', 'Your rate per reel · INR', 'type="number" inputmode="decimal" min="0" max="999999999" step="0.01" placeholder="e.g. 2500"', 'Your starting quote. We’ll confirm each brief and rate with you.')}
   ${field('whatsapp', 'WhatsApp number', 'type="tel" inputmode="tel" autocomplete="tel" maxlength="25" placeholder="+91 98765 43210"', 'Include your country code.')}

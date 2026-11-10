@@ -277,7 +277,7 @@ test('owner security and creator onboarding against isolated PostgreSQL', { skip
       assert.equal((await edit(completed, saved.id, { ...headers, 'X-CSRF-Token': '' })).status, 403);
       assert.equal((await edit({ ...completed, ratePerReel: '-5' })).status, 400);
       assert.equal((await edit({ ...completed, instagramHandle: handle })).status, 409);
-      assert.equal((await edit(completed, creatorID)).status, 404);
+      assert.equal((await edit(completed, crypto.randomUUID())).status, 404);
       assert.equal((await edit(completed)).status, 200);
       const updated = (await query('SELECT * FROM creators WHERE id=$1', [saved.id])).rows[0];
       assert.equal(updated.email, completed.email); assert.equal(updated.rate_per_reel, '1500.25'); assert.equal(updated.follower_count, '25000');
@@ -290,6 +290,29 @@ test('owner security and creator onboarding against isolated PostgreSQL', { skip
       global.fetch = originalFetch; app.set('trust proxy', false);
       for (const [key, value] of Object.entries(previous)) { if (value === undefined) delete process.env[key]; else process.env[key] = value; }
     }
+  });
+  await t.test('owner can correct public creator counts while preserving provenance, consent, review and notification state', async () => {
+    const before = (await query('SELECT * FROM creators WHERE id=$1', [creatorID])).rows[0];
+    const headers = { Cookie: cookie, 'X-CSRF-Token': csrf, 'Content-Type': 'application/json' };
+    const body = { fullName: before.full_name, instagramHandle: before.instagram_handle, niche: before.niche,
+      country: before.country, followerCount: '49000', averageReelViews: '50000', ratePerReel: before.rate_per_reel,
+      email: before.email, whatsapp: before.whatsapp, source: '', internalNotes: before.internal_notes,
+      consent: false, entry_method: 'manual', status: 'pending', qualityScore: 0 };
+    const edit = (data, extra = headers) => request('/api/admin/creators/' + creatorID + '/details', { method: 'PATCH', headers: extra, body: JSON.stringify(data) });
+    assert.equal((await edit(body, { 'Content-Type': 'application/json' })).status, 401);
+    assert.equal((await edit(body, { 'Content-Type': 'application/json', Authorization: 'Bearer ' + memberToken })).status, 403);
+    assert.equal((await edit(body, { ...headers, 'X-CSRF-Token': '' })).status, 403);
+    for (const invalid of [{ followerCount: '-1' }, { averageReelViews: '50K' }, { email: '' }, { ratePerReel: '' }, { source: '<script>' }]) assert.equal((await edit({ ...body, ...invalid })).status, 400);
+    const eventsBefore = Number((await query('SELECT COUNT(*) FROM owner_notification_events')).rows[0].count);
+    assert.equal((await edit(body)).status, 200);
+    const after = (await query('SELECT * FROM creators WHERE id=$1', [creatorID])).rows[0];
+    assert.equal(after.follower_count, '49000'); assert.equal(after.average_reel_views, '50000'); assert.equal(after.source, null);
+    for (const key of ['entry_method', 'added_by', 'status', 'quality_score', 'confirmation_email_status', 'consent_version']) assert.equal(after[key], before[key], key);
+    for (const key of ['created_at', 'consent_at', 'verified_at']) assert.equal(after[key]?.toISOString(), before[key]?.toISOString(), key);
+    assert.equal(Number((await query('SELECT COUNT(*) FROM owner_notification_events')).rows[0].count), eventsBefore);
+    const listing = await (await request('/api/admin/creators?q=' + handle + '&followersMin=49000', { headers })).json();
+    assert.ok(listing.creators.some((entry) => entry.id === creatorID && entry.follower_count === '49000'));
+    const html = await (await request('/creators')).text(); assert.ok(html.includes('49K = 49000')); assert.ok(html.includes('50K = 50000'));
   });
   await t.test('webhook rejects missing/tampered signatures, accepts the signature of exact raw bytes', async () => {
     const body = '{ "triggerEvent": "BOOKING_CREATED", "payload": { "uid": "test-' + suffix + '", "attendees": [{"name":"Test", "email":"test@example.test"}] } }';

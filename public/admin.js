@@ -47,7 +47,7 @@
     document.getElementById('quality-score').value = creator.quality_score === null ? '' : creator.quality_score;
     document.getElementById('internal-notes').value = creator.internal_notes;
     document.getElementById('review-message').textContent = '';
-    document.getElementById('edit-manual-details').hidden = creator.entry_method !== 'manual';
+    manualEditor.hidden = true;
     document.getElementById('editor-title').focus();
     editor.scrollIntoView({ block: 'start' });
   }
@@ -59,6 +59,18 @@
     if (savingManual || deleting || loading) return;
     manualForm.reset(); clearManualErrors();
     editingManualId = creator ? creator.id : '';
+    const consent = manualForm.elements.namedItem('consent');
+    consent.required = !creator;
+    document.getElementById('manual-consent-field').hidden = Boolean(creator);
+    for (const key of ['followerCount', 'averageReelViews', 'ratePerReel', 'whatsapp', 'email']) {
+      manualForm.elements.namedItem(key).required = Boolean(creator && creator.entry_method !== 'manual');
+    }
+    document.getElementById('manual-description').textContent = creator
+      ? 'Correct the saved profile below. Enter full counts: 49,000 followers means 49000, not 49. Required fields from public submissions must stay complete.'
+      : 'Enter details received in DMs. Leave unknown optional fields blank; you can fill them in later.';
+    document.getElementById('manual-save-note').textContent = creator
+      ? 'Existing consent, submission source type and review status are preserved. Saving corrections does not send emails.'
+      : 'Saved as pending for manual review. No confirmation emails are sent for owner-entered profiles.';
     const keys = { fullName: 'full_name', instagramHandle: 'instagram_handle', niche: 'niche', country: 'country', followerCount: 'follower_count', averageReelViews: 'average_reel_views', ratePerReel: 'rate_per_reel', whatsapp: 'whatsapp', email: 'email', source: 'source', internalNotes: 'internal_notes' };
     if (creator) {
       for (const [key, column] of Object.entries(keys)) manualForm.elements.namedItem(key).value = creator[column] ?? '';
@@ -70,7 +82,7 @@
     manualForm.elements.namedItem('fullName').focus(); manualEditor.scrollIntoView({ block: 'start' });
   }
   document.getElementById('add-creator').addEventListener('click', () => openManual());
-  document.getElementById('edit-manual-details').addEventListener('click', () => {
+  document.getElementById('edit-creator-details').addEventListener('click', () => {
     const creator = creators.find((entry) => entry.id === selectedId); if (creator) openManual(creator);
   });
   document.getElementById('close-manual').addEventListener('click', () => { if (!savingManual) { manualEditor.hidden = true; document.getElementById('add-creator').focus(); } });
@@ -142,8 +154,9 @@
         const status = node('td'); status.append(node('span', creator.status, 'badge ' + creator.status), node('small', creator.quality_score === null ? 'Not scored' : creator.quality_score + '/100')); row.append(status);
         const action = node('td'), actions = node('div', undefined, 'row-actions');
         const button = node('button', 'Review ↗', 'button secondary review-button'); button.type = 'button'; button.addEventListener('click', () => openReview(creator));
+        const edit = node('button', 'Edit', 'button secondary review-button'); edit.type = 'button'; edit.setAttribute('aria-label', 'Edit @' + creator.instagram_handle); edit.addEventListener('click', () => openManual(creator));
         const remove = node('button', 'Delete', 'button danger review-button'); remove.type = 'button'; remove.setAttribute('aria-label', 'Delete @' + creator.instagram_handle); remove.addEventListener('click', () => deleteCreator(creator, remove));
-        actions.append(button, remove); action.append(actions); row.append(action); rows.append(row);
+        actions.append(edit, button, remove); action.append(actions); row.append(action); rows.append(row);
       }
       if (!creators.length) { const row = node('tr'); const empty = node('td', 'No creators match these filters yet.', 'empty'); empty.colSpan = 7; row.append(empty); rows.append(row); }
       document.getElementById('result-count').textContent = data.total ? `${(page - 1) * data.limit + 1}–${Math.min(page * data.limit, data.total)} of ${data.total} creators` : '0 creators';

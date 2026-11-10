@@ -22,14 +22,19 @@ router.post('/', async (req, res, next) => {
 });
 router.patch('/:id/details', async (req, res, next) => {
   if (!/^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i.test(req.params.id)) return res.status(400).json({ message: 'Choose a valid creator.' });
-  const { data, errors } = validateCreator(req.body, { manual: true });
-  if (Object.keys(errors).length) return res.status(400).json({ message: 'Check the highlighted fields.', errors });
   try {
+    const current = (await query('SELECT entry_method FROM creators WHERE id=$1', [req.params.id])).rows[0];
+    if (!current) return res.status(404).json({ message: 'Creator not found. Reload your creator list.' });
+    const { data, errors } = validateCreator(req.body, { manual: current.entry_method === 'manual', admin: true, requireConsent: false });
+    if (Object.keys(errors).length) return res.status(400).json({ message: 'Check the highlighted fields.', errors });
+    // Keep consent, entry method, original owner, review and email status unchanged.
+    // A blank source stays Direct instead of being relabelled as a manual DM entry.
+    const source = typeof req.body.source === 'string' ? req.body.source.trim() || null : null;
     const result = await query(`UPDATE creators SET full_name=$1, instagram_handle=$2, niche=$3, follower_count=$4,
       average_reel_views=$5, country=$6, rate_per_reel=$7, whatsapp=$8, email=$9, source=$10, internal_notes=$11, updated_at=NOW()
-      WHERE id=$12 AND entry_method='manual' RETURNING id`,
-    [data.fullName, data.instagramHandle, data.niche, data.followerCount, data.averageReelViews, data.country, data.ratePerReel, data.whatsapp, data.email, data.source, data.internalNotes, req.params.id]);
-    if (!result.rows.length) return res.status(404).json({ message: 'Manual entry not found. Reload your creator list.' });
+      WHERE id=$12 RETURNING id`,
+    [data.fullName, data.instagramHandle, data.niche, data.followerCount, data.averageReelViews, data.country, data.ratePerReel, data.whatsapp, data.email, source, data.internalNotes, req.params.id]);
+    if (!result.rows.length) return res.status(404).json({ message: 'Creator not found. Reload your creator list.' });
     res.json({ message: 'Creator details updated.', id: result.rows[0].id });
   } catch (err) {
     if (err.code === '23505') return res.status(409).json({ message: 'That Instagram handle is already saved.', errors: { instagramHandle: 'This handle is already saved.' } });

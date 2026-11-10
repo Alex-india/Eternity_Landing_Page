@@ -6,7 +6,7 @@ function normalizeHandle(value) {
   }
   return handle.replace(/^@/, '').toLowerCase();
 }
-function validateCreator(body, { manual = false } = {}) {
+function validateCreator(body, { manual = false, admin = manual, requireConsent = true } = {}) {
   const errors = {};
   const data = {};
   const text = (key, max, label) => {
@@ -41,12 +41,12 @@ function validateCreator(body, { manual = false } = {}) {
     data.email = text('email', 254, 'Email').toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errors.email = 'Enter a valid email address.';
   }
-  if (!['on', 'true', true].includes(body.consent)) errors.consent = 'Please agree before joining the network.';
+  if (requireConsent && !['on', 'true', true].includes(body.consent)) errors.consent = 'Please agree before joining the network.';
   data.source = typeof body.source === 'string' ? body.source.trim().slice(0, 100) : '';
   if (data.source && !/^[a-zA-Z0-9_.\-]{1,100}$/.test(data.source)) data.source = '';
-  if (manual) {
+  if (admin) {
     if (body.source !== undefined && (typeof body.source !== 'string' || body.source.trim().length > 100 || (body.source.trim() && !/^[a-zA-Z0-9_.\-]+$/.test(body.source.trim())))) errors.source = 'Use up to 100 letters, numbers, dots, underscores or hyphens.';
-    data.source ||= 'dm-manual';
+    if (manual) data.source ||= 'dm-manual';
     data.internalNotes = typeof body.internalNotes === 'string' ? body.internalNotes.trim() : '';
     if ((body.internalNotes !== undefined && typeof body.internalNotes !== 'string') || data.internalNotes.length > 5000 || /\u0000/.test(data.internalNotes)) errors.internalNotes = 'Use up to 5000 characters for internal notes.';
     if (errors.consent) errors.consent = 'Confirm the creator agreed in DM to storing their details and sharing their profile with brands.';

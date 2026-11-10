@@ -30,8 +30,13 @@ unknown. These are stored as NULL, displayed as Unknown/Not provided, and sorted
 after known values. The source defaults to `dm-manual`; change it to your outreach
 batch/channel. Internal notes are private.
 
-Manual entries start pending and show a Manual entry label. Use **Review → Edit
-details** to complete or correct them later; review status/quality remain separate.
+Manual entries start pending and show a Manual entry label. Every creator row now
+has **Edit**, **Review**, and **Delete**. Use Edit to correct followers, average
+views, rates, contact details and other profile fields for both public submissions
+and manual entries. Required public-form fields remain required; manual entries
+may still have unknown values. Existing consent, entry method, created date,
+review status/quality and confirmation email status remain unchanged. Edits do not
+trigger signup notifications. The public form explains full counts (49K = 49000).
 New saves clear list filters and show all creators newest first so the saved
 entry is visible. Errors preserve entered values. Duplicate handles (including
 case, @ and URL variants) return an error and never overwrite the existing row.
