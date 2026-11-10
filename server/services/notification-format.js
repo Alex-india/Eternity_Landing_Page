@@ -1,12 +1,13 @@
 const { escape } = require('../views/creators');
 const clean = (value, length = 150) => String(value ?? '').replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029\u202a-\u202e\u2066-\u2069]/g, ' ').replace(/\b(?:https?:\/\/|www\.)\S+/gi, '[link removed]').replace(/\s+/g, ' ').trim().slice(0, length);
-const compact = (value) => new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(Number(value) || 0);
-const number = (value) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 }).format(Number(value) || 0);
+const compact = (value) => value === null || value === undefined ? 'Unknown' : new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(Number(value) || 0);
+const number = (value) => value === null || value === undefined ? 'Unknown' : new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 }).format(Number(value) || 0);
+const optionalNumber = (value) => value === null || value === undefined ? null : Number(value) || 0;
 function creatorSnapshot(creator) {
   // Explicit allowlist: contact details and internal notes never enter email or the outbox.
   return { handle: clean(creator.instagram_handle, 30).replace(/[^a-z0-9_.]/gi, ''), niche: clean(creator.niche),
-    followers: Number(creator.follower_count) || 0, views: Number(creator.average_reel_views) || 0,
-    country: clean(creator.country, 80), rate: Number(creator.rate_per_reel) || 0,
+    followers: optionalNumber(creator.follower_count), views: optionalNumber(creator.average_reel_views),
+    country: clean(creator.country, 80), rate: optionalNumber(creator.rate_per_reel),
     source: clean(creator.source || 'Direct', 100), joinedAt: new Date(creator.created_at).toISOString() };
 }
 function mail(subject, lines, adminURL) {

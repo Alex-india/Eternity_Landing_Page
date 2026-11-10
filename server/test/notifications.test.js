@@ -17,6 +17,13 @@ test('daily digest uses an 8pm IST boundary, including just before/after and yea
   const window = digestWindow(new Date('2026-11-08T14:30:00Z')); assert.equal(window.end.toISOString(), '2026-11-08T14:30:00.000Z'); assert.equal(window.end - window.start, 86400000);
   assert.equal(digestWindow(new Date('2027-01-01T01:00:00Z')).key, '2026-12-31');
 });
+
+test('unknown manual creator metrics are not represented as zero in email reports', () => {
+  const snapshot = creatorSnapshot({ instagram_handle: 'dm.creator', niche: 'Technology', follower_count: null, average_reel_views: null, rate_per_reel: null, country: 'India', source: 'dm-manual', created_at: new Date() });
+  assert.equal(snapshot.followers, null); assert.equal(snapshot.views, null); assert.equal(snapshot.rate, null);
+  const email = joinedMail(snapshot, 'https://agency.example/admin/creators');
+  assert.ok(email.textContent.includes('Followers: Unknown')); assert.ok(email.textContent.includes('Average reel views: Unknown'));
+});
 test('enabled notification config rejects placeholders and logs only missing setting names', () => {
   const previous = { ...process.env }, warn = console.warn, messages = [];
   Object.assign(process.env, { NODE_ENV: 'production', NOTIFICATIONS_ENABLED: 'true', OWNER_EMAIL: 'owner@example.test', BREVO_API_KEY: 'test-secret-key-never-log', BREVO_SENDER_EMAIL: 'verified@example.test', ADMIN_BASE_URL: 'https://agency.example', NOTIFY_HOURLY_LIMIT: '20' });

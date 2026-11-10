@@ -17,6 +17,36 @@ metadata is retained for email-budget accounting; it contains no profile/contact
 fields. To test, use a disposable profile: cancel once and verify it remains, then
 confirm deletion and verify it stays absent after refreshing the list.
 
+## Manually add a creator from DMs
+
+Open `/admin/creators` and click **Add creator**. Name, Instagram handle, niche,
+country and confirmation of the creator's DM agreement are required. Email,
+WhatsApp, followers, average views and INR reel rate can be left blank when
+unknown. These are stored as NULL, displayed as Unknown/Not provided, and sorted
+after known values. The source defaults to `dm-manual`; change it to your outreach
+batch/channel. Internal notes are private.
+
+Manual entries start pending and show a Manual entry label. Use **Review → Edit
+details** to complete or correct them later; review status/quality remain separate.
+New saves clear list filters and show all creators newest first so the saved
+entry is visible. Errors preserve entered values. Duplicate handles (including
+case, @ and URL variants) return an error and never overwrite the existing row.
+Public signup requirements and duplicate behavior remain unchanged. Owner-entered
+profiles do not send signup/confirmation emails. Optional scheduled digests count
+all added creators, including manual entries.
+
+Migration `004_manual_creators.sql` adds `entry_method` and `added_by`, and allows
+unknown contact/metric columns only for manual rows. Existing rows default to
+`form`; a database constraint continues to require those fields for form rows.
+The migration runner applies this automatically before the app starts. There are
+no new environment variables or dependencies.
+
+Test with a disposable profile: save a minimal DM entry, refresh and find it by
+handle/source, then use Review → Edit details to add views/rate and verify the
+values persist. Try the same handle again and an invalid rate; neither should
+create/overwrite a record. Cancel should close without saving. Owner session and
+CSRF are required for both create and edit endpoints.
+
 ## Required configuration
 
 Copy `server/.env.example` to `server/.env` for local work. Render environment

@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { creatorFilters } = require('../creator-filters');
 test('creator filters combine parameterized ranges, country and scoring with allowlisted sort', () => {
   const result = creatorFilters({ q: 'name_%', country: 'India', viewsMin: '5000', followersMax: '50000', rateMax: '2500.50', qualityMin: '70', scoreStatus: 'scored', sort: 'views' });
-  assert.ok(result.where.includes('quality_score IS NOT NULL')); assert.ok(result.where.includes('average_reel_views >= $3')); assert.equal(result.order, 'average_reel_views DESC, id');
+  assert.ok(result.where.includes('quality_score IS NOT NULL')); assert.ok(result.where.includes('average_reel_views >= $3')); assert.equal(result.order, 'average_reel_views DESC NULLS LAST, id');
   assert.deepEqual(result.params, ['%name\\_\\%%', 'India', '5000', '50000', '2500.50', '70']);
 });
 test('reject malformed ranges/dates/types and SQL injected sort', () => {

@@ -4,7 +4,7 @@
     const response = await fetch('/api/admin' + path, { ...options, credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken, ...options.headers } });
     if ([401, 403].includes(response.status) && path !== '/login') { window.location.assign('/admin/login'); throw new Error('Please sign in again.'); }
     const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Something went wrong. Please try again.');
+    if (!response.ok) { const error = new Error(data.message || 'Something went wrong. Please try again.'); error.fields = data.errors || {}; throw error; }
     return data;
   }
   const login = document.getElementById('owner-login');
@@ -25,15 +25,18 @@
   const editor = document.getElementById('creator-editor');
   const review = document.getElementById('review-form');
   const message = document.getElementById('list-message');
-  let page = 1, selectedId = '', creators = [], initialized = false, loading = false, deleting = false;
-  const number = (value) => Number(value).toLocaleString('en-IN');
+  const manualEditor = document.getElementById('manual-editor');
+  const manualForm = document.getElementById('manual-form');
+  let page = 1, selectedId = '', creators = [], initialized = false, loading = false, deleting = false, savingManual = false, editingManualId = '';
+  const number = (value) => value === null || value === undefined ? 'Unknown' : Number(value).toLocaleString('en-IN');
   function node(tag, text, className) { const element = document.createElement(tag); if (text !== undefined) element.textContent = text; if (className) element.className = className; return element; }
   function cell(row, title, subtitle) { const td = node('td'); td.append(node('strong', title)); if (subtitle !== undefined) td.append(node('small', subtitle)); row.append(td); return td; }
   function openReview(creator) {
+    if (loading || deleting || savingManual) return;
     selectedId = creator.id; editor.hidden = false;
     document.getElementById('editor-title').textContent = 'Review @' + creator.instagram_handle;
     const details = document.getElementById('creator-details'); details.replaceChildren();
-    const fields = [['Name', creator.full_name], ['Email', creator.email], ['WhatsApp', '+' + creator.whatsapp], ['Submitted', new Date(creator.created_at).toLocaleString()], ['Consent', creator.consent_version + ' · ' + new Date(creator.consent_at).toLocaleString()], ['Email status', creator.confirmation_email_status]];
+    const fields = [['Name', creator.full_name], ['Email', creator.email || 'Not provided'], ['WhatsApp', creator.whatsapp ? '+' + creator.whatsapp : 'Not provided'], ['Added', new Date(creator.created_at).toLocaleString()], ['Entry', creator.entry_method === 'manual' ? 'Added by owner from DMs' : 'Public creator form'], ['Consent', creator.consent_version + ' · ' + new Date(creator.consent_at).toLocaleString()], ['Email status', creator.entry_method === 'manual' ? 'Not sent for manual entries' : creator.confirmation_email_status]];
     fields.forEach(([label, value]) => { details.append(node('dt', label), node('dd', value)); });
     details.append(node('dt', 'Profile'));
     const profile = node('dd'); const link = node('a', 'Open Instagram ↗'); link.href = 'https://www.instagram.com/' + encodeURIComponent(creator.instagram_handle) + '/'; link.target = '_blank'; link.rel = 'noopener noreferrer'; profile.append(link); details.append(profile);
@@ -41,11 +44,59 @@
     document.getElementById('quality-score').value = creator.quality_score === null ? '' : creator.quality_score;
     document.getElementById('internal-notes').value = creator.internal_notes;
     document.getElementById('review-message').textContent = '';
+    document.getElementById('edit-manual-details').hidden = creator.entry_method !== 'manual';
     document.getElementById('editor-title').focus();
     editor.scrollIntoView({ block: 'start' });
   }
+  function clearManualErrors() {
+    for (const control of manualForm.elements) control.removeAttribute('aria-invalid');
+    manualForm.querySelectorAll('.error').forEach((error) => { error.textContent = ''; });
+  }
+  function openManual(creator = null) {
+    if (savingManual || deleting || loading) return;
+    manualForm.reset(); clearManualErrors();
+    editingManualId = creator ? creator.id : '';
+    const keys = { fullName: 'full_name', instagramHandle: 'instagram_handle', niche: 'niche', country: 'country', followerCount: 'follower_count', averageReelViews: 'average_reel_views', ratePerReel: 'rate_per_reel', whatsapp: 'whatsapp', email: 'email', source: 'source', internalNotes: 'internal_notes' };
+    if (creator) {
+      for (const [key, column] of Object.entries(keys)) manualForm.elements.namedItem(key).value = creator[column] ?? '';
+      manualForm.elements.namedItem('consent').checked = Boolean(creator.consent_at);
+    }
+    document.getElementById('manual-title').textContent = creator ? 'Edit @' + creator.instagram_handle : 'Add creator';
+    document.getElementById('save-manual').textContent = creator ? 'Save details' : 'Save creator';
+    editor.hidden = true; manualEditor.hidden = false;
+    manualForm.elements.namedItem('fullName').focus(); manualEditor.scrollIntoView({ block: 'start' });
+  }
+  document.getElementById('add-creator').addEventListener('click', () => openManual());
+  document.getElementById('edit-manual-details').addEventListener('click', () => {
+    const creator = creators.find((entry) => entry.id === selectedId); if (creator) openManual(creator);
+  });
+  document.getElementById('close-manual').addEventListener('click', () => { if (!savingManual) { manualEditor.hidden = true; document.getElementById('add-creator').focus(); } });
+  manualForm.addEventListener('submit', async (event) => {
+    event.preventDefault(); if (savingManual || deleting || loading || !csrfToken) return;
+    savingManual = true; clearManualErrors();
+    const button = document.getElementById('save-manual'), cancel = document.getElementById('close-manual');
+    const feedback = document.getElementById('manual-message');
+    button.disabled = true; cancel.disabled = true;
+    const body = Object.fromEntries(new FormData(manualForm)); body.consent = manualForm.elements.namedItem('consent').checked;
+    try {
+      const updated = Boolean(editingManualId);
+      await api('/creators' + (updated ? '/' + editingManualId + '/details' : ''), { method: updated ? 'PATCH' : 'POST', body: JSON.stringify(body) });
+      manualEditor.hidden = true; manualForm.reset(); editingManualId = '';
+      resetFilters(); page = 1;
+      const refreshed = await load();
+      message.textContent = (updated ? 'Creator details updated.' : 'Creator added as pending.') + (refreshed ? ' Showing all creators, newest first.' : ' Saved successfully; refresh the list to see the entry.');
+      document.getElementById('add-creator').focus();
+    } catch (err) {
+      feedback.textContent = err.message;
+      for (const [key, error] of Object.entries(err.fields || {})) {
+        const control = manualForm.elements.namedItem(key), target = document.getElementById('manual-' + key + '-error');
+        if (control && target) { control.setAttribute('aria-invalid', 'true'); target.textContent = error; }
+      }
+      const first = manualForm.querySelector('[aria-invalid="true"]'); if (first) first.focus();
+    } finally { savingManual = false; button.disabled = false; cancel.disabled = false; }
+  });
   async function deleteCreator(creator, button) {
-    if (loading || deleting) return;
+    if (loading || deleting || savingManual) return;
     if (!window.confirm(`Permanently delete ${creator.full_name} (@${creator.instagram_handle})?\n\nTheir profile and contact details will be removed. This cannot be undone.`)) return;
     deleting = true;
     button.disabled = true;
@@ -53,6 +104,7 @@
     try {
       await api('/creators/' + creator.id, { method: 'DELETE', body: JSON.stringify({ instagramHandle: creator.instagram_handle }) });
       if (selectedId === creator.id) { editor.hidden = true; selectedId = ''; review.reset(); }
+      if (editingManualId === creator.id) { manualEditor.hidden = true; editingManualId = ''; manualForm.reset(); }
       // Return to the previous page when deleting the last row on this page.
       if (creators.length === 1 && page > 1) page--;
       button.closest('tr').remove();
@@ -77,7 +129,9 @@
         const row = node('tr');
         cell(row, creator.full_name, '@' + creator.instagram_handle); cell(row, creator.niche, creator.country);
         cell(row, number(creator.average_reel_views) + ' avg. views', number(creator.follower_count) + ' followers');
-        cell(row, '₹' + number(creator.rate_per_reel), creator.rate_currency); cell(row, creator.source || 'Direct', new Date(creator.created_at).toLocaleDateString());
+        cell(row, creator.rate_per_reel === null ? 'Unknown' : '₹' + number(creator.rate_per_reel), creator.rate_currency);
+        const sourceCell = cell(row, creator.source || 'Direct', new Date(creator.created_at).toLocaleDateString());
+        if (creator.entry_method === 'manual') sourceCell.append(node('small', 'Manual entry'));
         const status = node('td'); status.append(node('span', creator.status, 'badge ' + creator.status), node('small', creator.quality_score === null ? 'Not scored' : creator.quality_score + '/100')); row.append(status);
         const action = node('td'), actions = node('div', undefined, 'row-actions');
         const button = node('button', 'Review ↗', 'button secondary review-button'); button.type = 'button'; button.addEventListener('click', () => openReview(creator));
@@ -92,17 +146,20 @@
     } catch (err) { message.textContent = err.message; return false; }
     finally { loading = false; }
   }
-  filters.addEventListener('submit', (event) => { event.preventDefault(); if (loading || deleting) return; page = 1; editor.hidden = true; load(); });
-  filters.addEventListener('reset', (event) => {
-    event.preventDefault(); if (loading || deleting) return;
+  function resetFilters() {
     for (const control of filters.elements) { if (control.tagName === 'SELECT') control.selectedIndex = 0; else if (control.tagName === 'INPUT') control.value = ''; }
+  }
+  filters.addEventListener('submit', (event) => { event.preventDefault(); if (loading || deleting || savingManual) return; page = 1; editor.hidden = true; load(); });
+  filters.addEventListener('reset', (event) => {
+    event.preventDefault(); if (loading || deleting || savingManual) return;
+    resetFilters();
     page = 1; editor.hidden = true; load();
   });
-  document.getElementById('previous').addEventListener('click', () => { if (!loading && !deleting) { page--; editor.hidden = true; load(); } });
-  document.getElementById('next').addEventListener('click', () => { if (!loading && !deleting) { page++; editor.hidden = true; load(); } });
+  document.getElementById('previous').addEventListener('click', () => { if (!loading && !deleting && !savingManual) { page--; editor.hidden = true; load(); } });
+  document.getElementById('next').addEventListener('click', () => { if (!loading && !deleting && !savingManual) { page++; editor.hidden = true; load(); } });
   document.getElementById('close-editor').addEventListener('click', () => { editor.hidden = true; });
   review.addEventListener('submit', async (event) => {
-    event.preventDefault(); if (deleting) return; const button = review.querySelector('button[type="submit"]'); button.disabled = true;
+    event.preventDefault(); if (deleting || savingManual) return; const button = review.querySelector('button[type="submit"]'); button.disabled = true;
     const score = document.getElementById('quality-score').value;
     const feedback = document.getElementById('review-message');
     try {

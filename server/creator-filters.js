@@ -1,5 +1,5 @@
 const { NICHES } = require('./creator-config');
-const SORTS = { newest: 'created_at DESC', oldest: 'created_at ASC', views: 'average_reel_views DESC', followers: 'follower_count DESC', 'rate-low': 'rate_per_reel ASC', 'rate-high': 'rate_per_reel DESC', quality: 'quality_score DESC NULLS LAST' };
+const SORTS = { newest: 'created_at DESC', oldest: 'created_at ASC', views: 'average_reel_views DESC NULLS LAST', followers: 'follower_count DESC NULLS LAST', 'rate-low': 'rate_per_reel ASC NULLS LAST', 'rate-high': 'rate_per_reel DESC NULLS LAST', quality: 'quality_score DESC NULLS LAST' };
 function creatorFilters(input) {
   const params = [], conditions = [];
   const add = (condition, value) => { params.push(value); conditions.push(condition.replaceAll('?', '$' + params.length)); };

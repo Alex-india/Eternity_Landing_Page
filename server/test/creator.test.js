@@ -21,6 +21,19 @@ test('signed public form token rejects forgery and expiration', () => {
   const now = Date.now; Date.now = () => now() + 25 * 60 * 60 * 1000;
   try { assert.equal(validFormToken(token), false); } finally { Date.now = now; }
 });
+
+test('manual profiles allow unknown details, but validate supplied values and DM consent', () => {
+  const minimal = { fullName: 'DM Creator', instagramHandle: '@DM.Creator', niche: 'Technology', country: 'India', consent: true };
+  const result = validateCreator(minimal, { manual: true });
+  assert.deepEqual(result.errors, {}); assert.equal(result.data.instagramHandle, 'dm.creator'); assert.equal(result.data.source, 'dm-manual');
+  for (const field of ['email', 'whatsapp', 'followerCount', 'averageReelViews', 'ratePerReel']) assert.equal(result.data[field], null, field);
+  assert.ok(validateCreator(minimal).errors.email); assert.ok(validateCreator(minimal).errors.averageReelViews);
+  for (const [key, value] of Object.entries({ fullName: '<script>', instagramHandle: 'invalid..handle', niche: 'Trading', country: [], followerCount: -1, averageReelViews: '1e5', ratePerReel: '-5', whatsapp: {}, email: ['bad'], source: '<script>', internalNotes: [], consent: false })) {
+    assert.ok(validateCreator({ ...minimal, [key]: value }, { manual: true }).errors[key], key);
+  }
+  const zero = validateCreator({ ...minimal, followerCount: 0, averageReelViews: '0', ratePerReel: '0' }, { manual: true });
+  assert.deepEqual(zero.errors, {}); assert.equal(zero.data.followerCount, 0); assert.equal(zero.data.ratePerReel, '0');
+});
 test('standalone creator HTML escapes redisplayed fields and has no site layout or third-party dependencies', () => {
   const html = renderForm({ fullName: '"><script>alert(1)</script>', source: 'dm-batch1' });
   assert.ok(html.includes('&lt;script&gt;')); assert.ok(!html.includes('<nav')); assert.ok(!html.includes('<footer')); assert.ok(!html.includes('cdn.tailwindcss')); assert.ok(html.includes('noindex')); assert.ok(html.includes('action="/creators"'));

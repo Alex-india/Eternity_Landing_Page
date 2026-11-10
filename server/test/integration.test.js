@@ -238,6 +238,54 @@ test('owner security and creator onboarding against isolated PostgreSQL', { skip
     assert.equal((await request('/api/admin/creators?rateMin=1000&rateMax=100', { headers })).status, 400);
     assert.equal((await request('/api/admin/creators?sort=' + encodeURIComponent('1; DROP TABLE creators'), { headers })).status, 400);
   });
+  await t.test('owner can add and complete DM profiles without emails, duplicates or weakening public validation', async () => {
+    app.set('trust proxy', 1);
+    const previous = { NOTIFICATIONS_ENABLED: process.env.NOTIFICATIONS_ENABLED, CREATOR_EMAIL_ENABLED: process.env.CREATOR_EMAIL_ENABLED, ADMIN_BASE_URL: process.env.ADMIN_BASE_URL, BREVO_API_KEY: process.env.BREVO_API_KEY, BREVO_SENDER_EMAIL: process.env.BREVO_SENDER_EMAIL };
+    Object.assign(process.env, { NOTIFICATIONS_ENABLED: 'true', CREATOR_EMAIL_ENABLED: 'true', ADMIN_BASE_URL: base, BREVO_API_KEY: 'manual-test-key', BREVO_SENDER_EMAIL: 'verified@example.test' });
+    let emails = 0;
+    global.fetch = async (url, options) => { if (String(url).startsWith('https://api.brevo.com/')) { emails++; return new Response('{}', { status: 503 }); } return originalFetch(url, options); };
+    const headers = { Cookie: cookie, 'X-CSRF-Token': csrf, 'Content-Type': 'application/json', 'X-Forwarded-For': '192.0.2.81' };
+    const body = { fullName: 'DM Creator', instagramHandle: '@DM_' + suffix, niche: 'Technology', country: 'India', consent: true, source: 'instagram-dm', internalNotes: 'Rate to follow in DM', status: 'active', added_by: member.id, entry_method: 'form' };
+    const post = (data, extraHeaders = headers) => request('/api/admin/creators', { method: 'POST', headers: extraHeaders, body: JSON.stringify(data) });
+    try {
+      const page = await (await request('/admin/creators', { headers })).text();
+      assert.ok(page.includes('id="add-creator"')); assert.ok(page.includes('id="manual-form"')); assert.ok(page.includes('agreed in DM'));
+      assert.equal((await post(body, { 'Content-Type': 'application/json', 'X-Forwarded-For': '192.0.2.81' })).status, 401);
+      assert.equal((await post(body, { Authorization: 'Bearer ' + memberToken, 'Content-Type': 'application/json', 'X-Forwarded-For': '192.0.2.81' })).status, 403);
+      assert.equal((await post(body, { ...headers, 'X-CSRF-Token': '' })).status, 403);
+      assert.equal((await post({ ...body, consent: false })).status, 400);
+      assert.equal((await post({ ...body, email: 'bad', averageReelViews: '-1' })).status, 400);
+      const attempts = await Promise.all([post(body), post({ ...body, instagramHandle: 'https://www.instagram.com/' + body.instagramHandle.slice(1).toUpperCase() + '/' })]);
+      assert.deepEqual(attempts.map((response) => response.status).sort(), [201, 409]);
+      const saved = await attempts.find((response) => response.status === 201).json();
+      const row = (await query('SELECT * FROM creators WHERE id=$1', [saved.id])).rows[0];
+      assert.equal(row.entry_method, 'manual'); assert.equal(row.added_by, owner.id); assert.equal(row.status, 'pending');
+      assert.equal(row.consent_version, 'creator-sharing-dm-v1'); assert.ok(row.consent_at); assert.equal(row.internal_notes, body.internalNotes);
+      for (const key of ['follower_count', 'average_reel_views', 'rate_per_reel', 'whatsapp', 'email']) assert.equal(row[key], null, key);
+      assert.equal(row.confirmation_email_status, 'disabled');
+      assert.equal((await request('/api/creators', json(await fields({ instagramHandle: row.instagram_handle }), { 'X-Forwarded-For': '192.0.2.81' }))).status, 200);
+      assert.equal((await query('SELECT full_name FROM creators WHERE id=$1', [saved.id])).rows[0].full_name, 'DM Creator');
+      assert.equal((await request('/api/creators', json(await fields({ instagramHandle: 'incomplete_' + suffix, email: '', followerCount: '' }), { 'X-Forwarded-For': '192.0.2.81' }))).status, 400);
+      await assert.rejects(query("INSERT INTO creators(id,full_name,instagram_handle,niche,country,consent_at,consent_version) VALUES($1,'Incomplete',$2,'Technology','India',NOW(),'test')", [crypto.randomUUID(), 'db_guard_' + suffix]), { code: '23514' });
+      const edit = (data, recordID = saved.id, extraHeaders = headers) => request('/api/admin/creators/' + recordID + '/details', { method: 'PATCH', headers: extraHeaders, body: JSON.stringify(data) });
+      const completed = { ...body, email: 'dm@example.test', whatsapp: '+91 99999 99999', followerCount: '25000', averageReelViews: '18000', ratePerReel: '1500.25', internalNotes: 'Complete from DM' };
+      assert.equal((await edit(completed, saved.id, { ...headers, 'X-CSRF-Token': '' })).status, 403);
+      assert.equal((await edit({ ...completed, ratePerReel: '-5' })).status, 400);
+      assert.equal((await edit({ ...completed, instagramHandle: handle })).status, 409);
+      assert.equal((await edit(completed, creatorID)).status, 404);
+      assert.equal((await edit(completed)).status, 200);
+      const updated = (await query('SELECT * FROM creators WHERE id=$1', [saved.id])).rows[0];
+      assert.equal(updated.email, completed.email); assert.equal(updated.rate_per_reel, '1500.25'); assert.equal(updated.follower_count, '25000');
+      assert.equal(updated.consent_at.toISOString(), row.consent_at.toISOString()); assert.equal(updated.status, 'pending');
+      const listing = await (await request('/api/admin/creators?source=instagram-dm&viewsMin=15000', { headers })).json();
+      assert.ok(listing.creators.some((creator) => creator.id === saved.id));
+      assert.equal((await query('SELECT event_key FROM owner_notification_events WHERE event_key=$1', ['creator.joined:' + saved.id])).rows.length, 0);
+      assert.equal(emails, 0);
+    } finally {
+      global.fetch = originalFetch; app.set('trust proxy', false);
+      for (const [key, value] of Object.entries(previous)) { if (value === undefined) delete process.env[key]; else process.env[key] = value; }
+    }
+  });
   await t.test('webhook rejects missing/tampered signatures, accepts the signature of exact raw bytes', async () => {
     const body = '{ "triggerEvent": "BOOKING_CREATED", "payload": { "uid": "test-' + suffix + '", "attendees": [{"name":"Test", "email":"test@example.test"}] } }';
     assert.equal((await request('/api/cal/webhook', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body })).status, 401);
