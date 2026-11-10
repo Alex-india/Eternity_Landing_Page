@@ -19,6 +19,10 @@ confirm deletion and verify it stays absent after refreshing the list.
 
 ## Manually add a creator from DMs
 
+The top of the admin list displays **Total entries**, counting public and manual
+profiles across all pages. With filters applied it also shows how many match;
+adding/deleting a creator refreshes the count with the list.
+
 Open `/admin/creators` and click **Add creator**. Name, Instagram handle, niche,
 country and confirmation of the creator's DM agreement are required. Email,
 WhatsApp, followers, average views and INR reel rate can be left blank when

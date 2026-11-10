@@ -27,6 +27,9 @@
   const message = document.getElementById('list-message');
   const manualEditor = document.getElementById('manual-editor');
   const manualForm = document.getElementById('manual-form');
+  const entrySummary = document.getElementById('entry-summary');
+  const entryCount = document.getElementById('entry-count');
+  const entryCountNote = document.getElementById('entry-count-note');
   let page = 1, selectedId = '', creators = [], initialized = false, loading = false, deleting = false, savingManual = false, editingManualId = '';
   const number = (value) => value === null || value === undefined ? 'Unknown' : Number(value).toLocaleString('en-IN');
   function node(tag, text, className) { const element = document.createElement(tag); if (text !== undefined) element.textContent = text; if (className) element.className = className; return element; }
@@ -117,11 +120,15 @@
   async function load() {
     if (loading) return false;
     loading = true; message.textContent = 'Loading…';
+    entrySummary.setAttribute('aria-busy', 'true');
     document.getElementById('previous').disabled = true; document.getElementById('next').disabled = true;
     try {
       const params = new URLSearchParams(new FormData(filters)); params.set('page', String(page));
       const data = await api('/creators?' + params.toString()); creators = data.creators;
       const active = [...params.entries()].filter(([key, value]) => value && key !== 'page' && !(key === 'sort' && value === 'newest')).length;
+      const filtered = [...params.entries()].some(([key, value]) => value && key !== 'page' && key !== 'sort');
+      entryCount.textContent = number(data.totalEntries);
+      entryCountNote.textContent = filtered ? number(data.total) + ' matching your filters' : 'All creators, including manual entries';
       document.getElementById('active-filter-count').textContent = active ? active + ' active filter' + (active === 1 ? '' : 's') : 'Views, rates, quality & dates';
       if (!initialized) { data.niches.forEach((niche) => { const option = node('option', niche); option.value = niche; document.getElementById('niche-filter').append(option); }); initialized = true; }
       rows.replaceChildren();
@@ -143,8 +150,8 @@
       document.getElementById('previous').disabled = page <= 1; document.getElementById('next').disabled = page * data.limit >= data.total;
       message.textContent = '';
       return true;
-    } catch (err) { message.textContent = err.message; return false; }
-    finally { loading = false; }
+    } catch (err) { message.textContent = err.message; entryCountNote.textContent = entryCount.textContent === '—' ? 'Count unavailable. Reload to try again.' : 'Last loaded count. Refresh failed.'; return false; }
+    finally { loading = false; entrySummary.setAttribute('aria-busy', 'false'); }
   }
   function resetFilters() {
     for (const control of filters.elements) { if (control.tagName === 'SELECT') control.selectedIndex = 0; else if (control.tagName === 'INPUT') control.value = ''; }

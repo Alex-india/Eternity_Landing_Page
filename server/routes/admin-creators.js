@@ -43,9 +43,9 @@ router.get('/', async (req, res, next) => {
   const page = Math.min(100000, Math.max(1, parseInt(req.query.page, 10) || 1));
   const limit = 25;
   try {
-    const count = await query(`SELECT COUNT(*) FROM creators ${where}`, params);
+    const count = await query(`SELECT COUNT(*) AS count, (SELECT COUNT(*) FROM creators) AS total_entries FROM creators ${where}`, params);
     const rows = await query(`SELECT * FROM creators ${where} ORDER BY ${order} LIMIT $${params.length + 1} OFFSET $${params.length + 2}`, [...params, limit, (page - 1) * limit]);
-    res.json({ creators: rows.rows, page, total: Number(count.rows[0].count), limit, niches: NICHES });
+    res.json({ creators: rows.rows, page, total: Number(count.rows[0].count), totalEntries: Number(count.rows[0].total_entries), limit, niches: NICHES });
   } catch (err) { next(err); }
 });
 router.patch('/:id', async (req, res, next) => {

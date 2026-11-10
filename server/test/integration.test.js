@@ -235,6 +235,11 @@ test('owner security and creator onboarding against isolated PostgreSQL', { skip
     const ranges = await request('/api/admin/creators?q=' + handle + '&country=india&viewsMin=8000&viewsMax=9000&followersMin=10000&rateMax=2600&qualityMin=80&sort=quality', { headers });
     assert.equal(ranges.status, 200); assert.ok((await ranges.json()).creators.some((row) => row.id === creatorID));
     const none = await request('/api/admin/creators?q=' + handle + '&rateMax=100', { headers }); assert.equal((await none.json()).total, 0);
+    const totalEntries = Number((await query('SELECT COUNT(*) FROM creators')).rows[0].count);
+    const all = await (await request('/api/admin/creators', { headers })).json();
+    assert.equal(all.totalEntries, totalEntries); assert.equal(all.total, totalEntries);
+    const empty = await (await request('/api/admin/creators?q=missing-count-' + suffix, { headers })).json();
+    assert.equal(empty.total, 0); assert.equal(empty.totalEntries, totalEntries);
     assert.equal((await request('/api/admin/creators?rateMin=1000&rateMax=100', { headers })).status, 400);
     assert.equal((await request('/api/admin/creators?sort=' + encodeURIComponent('1; DROP TABLE creators'), { headers })).status, 400);
   });
