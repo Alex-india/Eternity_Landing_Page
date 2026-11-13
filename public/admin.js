@@ -30,10 +30,71 @@
   const entrySummary = document.getElementById('entry-summary');
   const entryCount = document.getElementById('entry-count');
   const entryCountNote = document.getElementById('entry-count-note');
-  let page = 1, selectedId = '', creators = [], initialized = false, loading = false, deleting = false, savingManual = false, editingManualId = '';
+  let page = 1, selectedId = '', creators = [], loading = false, deleting = false, savingManual = false, editingManualId = '';
+  const selectedCreators = new Set();
+  const selectPage = document.getElementById('select-page');
+  const exportButton = document.getElementById('export-selected');
+  const exportPreview = document.getElementById('export-preview');
+  const exportText = document.getElementById('export-text');
+  const exportMessage = document.getElementById('export-message');
+  let exporting = false, exportRevision = 0, exportFilename = '';
   const number = (value) => value === null || value === undefined ? 'Unknown' : Number(value).toLocaleString('en-IN');
   function node(tag, text, className) { const element = document.createElement(tag); if (text !== undefined) element.textContent = text; if (className) element.className = className; return element; }
   function cell(row, title, subtitle) { const td = node('td'); td.append(node('strong', title)); if (subtitle !== undefined) td.append(node('small', subtitle)); row.append(td); return td; }
+  function updateSelection(invalidate = true) {
+    if (invalidate) { exportRevision++; exportPreview.hidden = true; exportText.value = ''; exportFilename = ''; }
+    document.getElementById('selected-count').textContent = number(selectedCreators.size) + ' selected';
+    document.getElementById('clear-selection').disabled = !selectedCreators.size;
+    exportButton.disabled = !selectedCreators.size || exporting || loading || deleting || savingManual;
+    const checkedOnPage = creators.filter((creator) => selectedCreators.has(creator.id)).length;
+    selectPage.disabled = loading || !creators.length;
+    selectPage.checked = Boolean(creators.length && checkedOnPage === creators.length);
+    selectPage.indeterminate = checkedOnPage > 0 && checkedOnPage < creators.length;
+    rows.querySelectorAll('input[data-creator-id]').forEach((checkbox) => { checkbox.checked = selectedCreators.has(checkbox.dataset.creatorId); });
+  }
+  selectPage.addEventListener('change', () => {
+    const additions = creators.filter((creator) => !selectedCreators.has(creator.id));
+    if (selectPage.checked && selectedCreators.size + additions.length > 200) {
+      exportMessage.textContent = 'Select up to 200 creators per export. Clear some selections first.'; updateSelection(false); return;
+    }
+    for (const creator of creators) { if (selectPage.checked) selectedCreators.add(creator.id); else selectedCreators.delete(creator.id); }
+    exportMessage.textContent = ''; updateSelection();
+  });
+  document.getElementById('clear-selection').addEventListener('click', () => { selectedCreators.clear(); exportMessage.textContent = ''; updateSelection(); });
+  exportButton.addEventListener('click', async () => {
+    if (!selectedCreators.size || exporting || loading || deleting || savingManual) return;
+    exporting = true; updateSelection(); const revision = exportRevision;
+    exportMessage.textContent = 'Preparing selected profiles...';
+    try {
+      const data = await api('/creators/export', { method: 'POST', body: JSON.stringify({ ids: [...selectedCreators] }) });
+      if (revision !== exportRevision) { exportMessage.textContent = 'Selection changed. Click Export selected again.'; return; }
+      exportText.value = data.text; exportFilename = data.filename; exportPreview.hidden = false;
+      document.getElementById('export-feedback').textContent = '';
+      const whatsapp = document.getElementById('whatsapp-export'), encoded = encodeURIComponent(data.text);
+      whatsapp.hidden = encoded.length > 6000;
+      if (!whatsapp.hidden) whatsapp.href = 'https://wa.me/?text=' + encoded;
+      else whatsapp.removeAttribute('href');
+      document.getElementById('whatsapp-export-note').textContent = whatsapp.hidden
+        ? 'This shortlist is long. Copy the message, or attach the downloaded .txt file in WhatsApp.'
+        : 'Open WhatsApp lets you choose the recipient. Nothing is sent automatically.';
+      exportMessage.textContent = data.count + ' selected profiles ready. Review below before sharing.';
+      exportPreview.scrollIntoView({ block: 'start' });
+    } catch (err) { exportMessage.textContent = err.message; }
+    finally { exporting = false; updateSelection(false); }
+  });
+  document.getElementById('copy-export').addEventListener('click', async () => {
+    if (!exportText.value) return;
+    const feedback = document.getElementById('export-feedback');
+    try { await navigator.clipboard.writeText(exportText.value); feedback.textContent = 'Copied. Paste into your WhatsApp conversation.'; }
+    catch { exportText.focus(); exportText.select(); feedback.textContent = 'Copy is unavailable in this browser. The message is selected; copy it manually.'; }
+  });
+  document.getElementById('download-export').addEventListener('click', () => {
+    if (!exportText.value || !exportFilename) return;
+    const url = URL.createObjectURL(new Blob([exportText.value], { type: 'text/plain;charset=utf-8' }));
+    const link = node('a'); link.href = url; link.download = exportFilename; document.body.append(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+  document.getElementById('close-export').addEventListener('click', () => { exportPreview.hidden = true; exportButton.focus(); });
   function openReview(creator) {
     if (loading || deleting || savingManual) return;
     selectedId = creator.id; editor.hidden = false;
@@ -108,7 +169,7 @@
         if (control && target) { control.setAttribute('aria-invalid', 'true'); target.textContent = error; }
       }
       const first = manualForm.querySelector('[aria-invalid="true"]'); if (first) first.focus();
-    } finally { savingManual = false; button.disabled = false; cancel.disabled = false; }
+    } finally { savingManual = false; button.disabled = false; cancel.disabled = false; updateSelection(false); }
   });
   async function deleteCreator(creator, button) {
     if (loading || deleting || savingManual) return;
@@ -118,6 +179,7 @@
     message.textContent = 'Deleting @' + creator.instagram_handle + '…';
     try {
       await api('/creators/' + creator.id, { method: 'DELETE', body: JSON.stringify({ instagramHandle: creator.instagram_handle }) });
+      selectedCreators.delete(creator.id); updateSelection();
       if (selectedId === creator.id) { editor.hidden = true; selectedId = ''; review.reset(); }
       if (editingManualId === creator.id) { manualEditor.hidden = true; editingManualId = ''; manualForm.reset(); }
       // Return to the previous page when deleting the last row on this page.
@@ -127,25 +189,39 @@
       const refreshed = await load();
       message.textContent = 'Deleted @' + creator.instagram_handle + '.' + (refreshed ? '' : ' Refresh the list to update the count.');
     } catch (err) { message.textContent = err.message; }
-    finally { deleting = false; button.disabled = false; }
+    finally { deleting = false; button.disabled = false; updateSelection(false); }
   }
   async function load() {
     if (loading) return false;
     loading = true; message.textContent = 'Loading…';
+    updateSelection();
     entrySummary.setAttribute('aria-busy', 'true');
     document.getElementById('previous').disabled = true; document.getElementById('next').disabled = true;
     try {
       const params = new URLSearchParams(new FormData(filters)); params.set('page', String(page));
       const data = await api('/creators?' + params.toString()); creators = data.creators;
-      const active = [...params.entries()].filter(([key, value]) => value && key !== 'page' && !(key === 'sort' && value === 'newest')).length;
+      const active = new Set([...params.entries()].filter(([key, value]) => value && key !== 'page' && !(key === 'sort' && value === 'newest')).map(([key]) => key)).size;
       const filtered = [...params.entries()].some(([key, value]) => value && key !== 'page' && key !== 'sort');
       entryCount.textContent = number(data.totalEntries);
       entryCountNote.textContent = filtered ? number(data.total) + ' matching your filters' : 'All creators, including manual entries';
       document.getElementById('active-filter-count').textContent = active ? active + ' active filter' + (active === 1 ? '' : 's') : 'Views, rates, quality & dates';
-      if (!initialized) { data.niches.forEach((niche) => { const option = node('option', niche); option.value = niche; document.getElementById('niche-filter').append(option); }); initialized = true; }
+      for (const key of ['status', 'niche']) {
+        const count = params.getAll(key).filter(Boolean).length;
+        document.getElementById(key + '-choice-count').textContent = count ? count + ' selected' : 'Any';
+      }
       rows.replaceChildren();
       for (const creator of creators) {
         const row = node('tr');
+        const selection = node('td'), checkbox = node('input'); checkbox.type = 'checkbox'; checkbox.dataset.creatorId = creator.id;
+        checkbox.setAttribute('aria-label', 'Select @' + creator.instagram_handle); checkbox.checked = selectedCreators.has(creator.id);
+        checkbox.addEventListener('change', () => {
+          if (checkbox.checked && selectedCreators.size >= 200 && !selectedCreators.has(creator.id)) {
+            checkbox.checked = false; exportMessage.textContent = 'Select up to 200 creators per export.'; return;
+          }
+          if (checkbox.checked) selectedCreators.add(creator.id); else selectedCreators.delete(creator.id);
+          exportMessage.textContent = ''; updateSelection();
+        });
+        selection.append(checkbox); row.append(selection);
         cell(row, creator.full_name, '@' + creator.instagram_handle); cell(row, creator.niche, creator.country);
         cell(row, number(creator.average_reel_views) + ' avg. views', number(creator.follower_count) + ' followers');
         cell(row, creator.rate_per_reel === null ? 'Unknown' : '₹' + number(creator.rate_per_reel), creator.rate_currency);
@@ -158,16 +234,19 @@
         const remove = node('button', 'Delete', 'button danger review-button'); remove.type = 'button'; remove.setAttribute('aria-label', 'Delete @' + creator.instagram_handle); remove.addEventListener('click', () => deleteCreator(creator, remove));
         actions.append(edit, button, remove); action.append(actions); row.append(action); rows.append(row);
       }
-      if (!creators.length) { const row = node('tr'); const empty = node('td', 'No creators match these filters yet.', 'empty'); empty.colSpan = 7; row.append(empty); rows.append(row); }
+      if (!creators.length) { const row = node('tr'); const empty = node('td', 'No creators match these filters yet.', 'empty'); empty.colSpan = 8; row.append(empty); rows.append(row); }
       document.getElementById('result-count').textContent = data.total ? `${(page - 1) * data.limit + 1}–${Math.min(page * data.limit, data.total)} of ${data.total} creators` : '0 creators';
       document.getElementById('previous').disabled = page <= 1; document.getElementById('next').disabled = page * data.limit >= data.total;
       message.textContent = '';
       return true;
     } catch (err) { message.textContent = err.message; entryCountNote.textContent = entryCount.textContent === '—' ? 'Count unavailable. Reload to try again.' : 'Last loaded count. Refresh failed.'; return false; }
-    finally { loading = false; entrySummary.setAttribute('aria-busy', 'false'); }
+    finally { loading = false; entrySummary.setAttribute('aria-busy', 'false'); updateSelection(false); }
   }
   function resetFilters() {
-    for (const control of filters.elements) { if (control.tagName === 'SELECT') control.selectedIndex = 0; else if (control.tagName === 'INPUT') control.value = ''; }
+    for (const control of filters.elements) {
+      if (control.tagName === 'SELECT') control.selectedIndex = 0;
+      else if (control.tagName === 'INPUT') { if (control.type === 'checkbox') control.checked = false; else control.value = ''; }
+    }
   }
   filters.addEventListener('submit', (event) => { event.preventDefault(); if (loading || deleting || savingManual) return; page = 1; editor.hidden = true; load(); });
   filters.addEventListener('reset', (event) => {

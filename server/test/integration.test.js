@@ -355,6 +355,41 @@ test('owner security and creator onboarding against isolated PostgreSQL', { skip
     try { assert.equal((await require('../services/notifications').notifyOwner({ type: 'creator.joined', creatorId: id })).status, 'missing-record'); }
     finally { for (const [setting, value] of Object.entries(previous)) { if (value === undefined) delete process.env[setting]; else process.env[setting] = value; } }
   });
+  await t.test('multi-choice filters and selected exports work across pages with owner-only public field output', async () => {
+    app.set('trust proxy', 1);
+    const headers = { Cookie: cookie, 'X-CSRF-Token': csrf, 'Content-Type': 'application/json', 'X-Forwarded-For': '192.0.2.115' };
+    const ids = [], source = 'export-' + suffix;
+    try {
+      for (let index = 0; index < 30; index++) {
+        const id = crypto.randomUUID(); ids.push(id);
+        await query(`INSERT INTO creators(id,full_name,instagram_handle,niche,country,follower_count,average_reel_views,rate_per_reel,whatsapp,email,source,consent_at,consent_version,status,internal_notes)
+          VALUES($1,$2,$3,$4,$5,49000,12000,2500,'919999999999','export-private@example.test',$6,NOW(),'creator-sharing-v1',$7,'Private export note')`,
+        [id, 'Export Creator ' + index, 'export_' + suffix + '_' + index, index % 2 ? 'Fashion' : 'Technology', index % 2 ? 'Nepal' : 'India', source, index % 2 ? 'verified' : 'active']);
+      }
+      const params = new URLSearchParams([['source', source], ['niche', 'Fashion'], ['niche', 'Technology'], ['status', 'verified'], ['status', 'active'], ['country', 'india,nepal'], ['viewsMin', '10000'], ['rateMax', '3000']]);
+      const page1 = await (await request('/api/admin/creators?' + params, { headers })).json();
+      const page2 = await (await request('/api/admin/creators?' + params + '&page=2', { headers })).json();
+      assert.equal(page1.total, 30); assert.equal(page1.creators.length, 25); assert.equal(page2.creators.length, 5);
+      const narrower = await (await request('/api/admin/creators?source=' + source + '&niche=Fashion&status=verified&country=Nepal&rateMax=3000', { headers })).json();
+      assert.equal(narrower.total, 15);
+      const none = await (await request('/api/admin/creators?' + params + '&followersMin=50000', { headers })).json(); assert.equal(none.total, 0);
+      const post = (body, extra = headers) => request('/api/admin/creators/export', { method: 'POST', headers: extra, body: JSON.stringify(body) });
+      assert.equal((await post({ ids }, { 'Content-Type': 'application/json', 'X-Forwarded-For': '192.0.2.115' })).status, 401);
+      assert.equal((await post({ ids }, { Authorization: 'Bearer ' + memberToken, 'Content-Type': 'application/json', 'X-Forwarded-For': '192.0.2.115' })).status, 403);
+      assert.equal((await post({ ids }, { ...headers, 'X-CSRF-Token': '' })).status, 403);
+      for (const invalid of [{}, { ids: [] }, { ids: ['invalid'] }, { ids: Array(201).fill(ids[0]) }, { ids: [null] }]) assert.equal((await post(invalid)).status, 400);
+      const chosen = [page2.creators[0], page1.creators[0]];
+      const response = await post({ ids: [chosen[0].id, chosen[1].id, chosen[0].id], includeContacts: true });
+      assert.equal(response.status, 200); assert.equal(response.headers.get('cache-control'), 'no-store');
+      const exported = await response.json(); assert.equal(exported.count, 2); assert.match(exported.filename, /^eternity-creator-shortlist-\d{4}-\d{2}-\d{2}\.txt$/);
+      assert.ok(exported.text.indexOf(chosen[0].instagram_handle) < exported.text.indexOf(chosen[1].instagram_handle));
+      assert.ok(!exported.text.includes('export-private@example.test')); assert.ok(!exported.text.includes('919999999999')); assert.ok(!exported.text.includes('Private export note')); assert.ok(!exported.text.includes(source));
+      assert.ok(exported.text.includes('49,000')); assert.ok(exported.text.includes('12,000'));
+      assert.equal((await post({ ids: [ids[0], crypto.randomUUID()] })).status, 409);
+      const html = await (await request('/admin/creators', { headers })).text();
+      for (const id of ['select-page', 'export-selected', 'export-preview', 'copy-export', 'download-export']) assert.ok(html.includes('id="' + id + '"'));
+    } finally { app.set('trust proxy', false); }
+  });
   await t.test('logout revokes the session server-side, including a copied cookie', async () => {
     const result = await request('/api/admin/logout', { method: 'POST', headers: { Cookie: cookie, 'X-CSRF-Token': csrf, 'Content-Type': 'application/json' }, body: '{}' });
     assert.equal(result.status, 200); assert.equal((await request('/api/admin/creators', { headers: { Cookie: cookie } })).status, 403);

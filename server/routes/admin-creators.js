@@ -4,7 +4,21 @@ const { query, getClient } = require('../db/connection');
 const { NICHES } = require('../creator-config');
 const { creatorFilters } = require('../creator-filters');
 const { validateCreator } = require('../creator-validation');
+const { creatorExport } = require('../creator-export');
 const router = express.Router();
+router.post('/export', async (req, res, next) => {
+  const ids = req.body && req.body.ids;
+  if (!Array.isArray(ids) || !ids.length || ids.length > 200 || ids.some((id) => typeof id !== 'string' || !/^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i.test(id))) {
+    return res.status(400).json({ message: 'Select between 1 and 200 creators to export.' });
+  }
+  const selected = [...new Set(ids.map((id) => id.toLowerCase()))];
+  try {
+    const result = await query(`SELECT id, full_name, instagram_handle, niche, country, follower_count, average_reel_views, rate_per_reel, status
+      FROM creators WHERE id = ANY($1::uuid[]) AND consent_at IS NOT NULL ORDER BY array_position($1::uuid[], id)`, [selected]);
+    if (result.rows.length !== selected.length) return res.status(409).json({ message: 'Some selected profiles are no longer available. Clear the selection, refresh and select again.' });
+    res.json({ text: creatorExport(result.rows), count: result.rows.length, filename: 'eternity-creator-shortlist-' + new Date().toISOString().slice(0, 10) + '.txt' });
+  } catch (err) { next(err); }
+});
 // Parent router enforces the single owner session and CSRF for all writes.
 router.post('/', async (req, res, next) => {
   const { data, errors } = validateCreator(req.body, { manual: true });

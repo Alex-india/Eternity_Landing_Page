@@ -8,16 +8,31 @@ function creatorFilters(input) {
     if (typeof input[key] !== 'string') throw new Error('Invalid filter: ' + key);
     return input[key].trim();
   };
+  const list = (key, maxLength, allowed) => {
+    const raw = input[key];
+    if (raw === undefined || raw === '') return [];
+    const values = Array.isArray(raw) ? raw : [raw];
+    if (values.length > 20 || values.some((value) => typeof value !== 'string')) throw new Error('Invalid filter: ' + key);
+    const selected = [...new Set(values.flatMap((value) => value.split(',')).map((value) => value.trim()).filter(Boolean))];
+    if (selected.length > 20 || selected.some((value) => value.length > maxLength || (allowed && !allowed.includes(value)))) throw new Error('Choose valid ' + key + ' filters (up to 20).');
+    return selected;
+  };
+  const choices = (key, column, maxLength, allowed, insensitive = false) => {
+    const values = list(key, maxLength, allowed);
+    if (!values.length) return;
+    const field = insensitive ? `LOWER(${column})` : column;
+    const normalized = insensitive ? values.map((value) => value.toLowerCase()) : values;
+    add(values.length === 1 ? `${field} = ?` : `${field} = ANY(?::text[])`, values.length === 1 ? normalized[0] : normalized);
+  };
   const search = read('q').slice(0, 120);
   if (search) add('(full_name ILIKE ? OR instagram_handle ILIKE ? OR email ILIKE ?)', '%' + search.replace(/[\\%_]/g, '\\$&') + '%');
-  const status = read('status'); if (status && !['pending', 'verified', 'active'].includes(status)) throw new Error('Choose a valid status.');
-  if (status) add('status = ?', status);
-  const niche = read('niche'); if (niche && !NICHES.includes(niche)) throw new Error('Choose a valid niche.');
-  if (niche) add('niche = ?', niche);
-  const source = read('source'); if (source.length > 100) throw new Error('Source must be at most 100 characters.');
-  if (source) add('source = ?', source);
-  const country = read('country'); if (country.length > 80) throw new Error('Country must be at most 80 characters.');
-  if (country) add('LOWER(country) = LOWER(?)', country);
+  choices('status', 'status', 20, ['pending', 'verified', 'active']);
+  choices('niche', 'niche', 40, NICHES);
+  choices('source', 'source', 100);
+  choices('country', 'country', 80, null, true);
+  const entryMethod = read('entryMethod');
+  if (entryMethod && !['form', 'manual'].includes(entryMethod)) throw new Error('Choose a valid entry method.');
+  if (entryMethod) add('entry_method = ?', entryMethod);
   for (const [prefix, column, maximum, decimal] of [['views', 'average_reel_views', 2000000000, false], ['followers', 'follower_count', 2000000000, false], ['rate', 'rate_per_reel', 999999999.99, true], ['quality', 'quality_score', 100, false]]) {
     const low = read(prefix + 'Min'), high = read(prefix + 'Max');
     for (const [value, comparison] of [[low, '>='], [high, '<=']]) {

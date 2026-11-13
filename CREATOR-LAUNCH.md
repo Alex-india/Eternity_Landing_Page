@@ -17,11 +17,54 @@ metadata is retained for email-budget accounting; it contains no profile/contact
 fields. To test, use a disposable profile: cancel once and verify it remains, then
 confirm deletion and verify it stays absent after refreshing the list.
 
-## Manually add a creator from DMs
+## Creator counts
 
 The top of the admin list displays **Total entries**, counting public and manual
 profiles across all pages. With filters applied it also shows how many match;
 adding/deleting a creator refreshes the count with the list.
+
+## Filter and export a brand shortlist
+
+The admin list has a filter sidebar (stacked above results on phones). Expand
+**Niche** or **Status** and tick multiple options. Options within a group match
+any selected value; different groups, search, views/followers/rate/quality ranges,
+entry method, score status and dates apply together. Country and Source accept
+comma-separated values. Press **Apply**; Reset clears all filter controls.
+
+Tick individual creator rows or the header checkbox to select the current page.
+Selections stay across pagination and changed filters, including profiles outside
+the current results. The selected count is always shown. Use **Clear selection**
+to start a new shortlist. Selections are held in this tab's memory and clear on
+reload/logout. Maximum: 200 profiles per export.
+
+Press **Export selected** to fetch current saved profile data and preview the
+exact selected profiles in selection order. Export includes name, Instagram
+handle/link, niche, country, full follower count, average reel views, indicative
+INR reel rate and profile status. Pending profiles are explicitly marked Pending
+review; unknown values are Not provided. Email, WhatsApp, internal notes, quality
+score, consent details and source tags are excluded at the server. The only
+profile links in the generated message are constructed Instagram links.
+
+Use **Copy for WhatsApp**, **Download .txt**, or **Open WhatsApp** (for short
+messages). Clipboard-denied browsers select the text for manual copying. For
+large shortlists, copy the message or attach the UTF-8 .txt file in WhatsApp.
+Nothing is sent automatically. Exporting does not create a persistent shortlist
+or public URL. A deleted/unavailable selected profile causes a clear error rather
+than silently exporting a partial selection. The endpoint is owner-only, uses
+the existing CSRF checks and never caches the response.
+
+No dependencies, migrations or new environment variables are needed. Existing
+single-value filter URLs continue to work; repeated parameters support multiple
+values (for example `niche=Fashion&niche=Lifestyle&status=verified&status=active`).
+
+Deployment checks: choose Fashion + Lifestyle, Verified + Active, and a reel-rate
+maximum, then Apply and inspect the results/count. Select profiles on two pages,
+change a filter and confirm the selected count remains; export and confirm only
+those selected profiles appear. Copy/paste into a draft WhatsApp message or open
+the downloaded .txt; verify full numbers and no contact/internal fields. Reset
+filters, clear selections, then check Edit/Add/Delete still refresh the list.
+
+## Manually add a creator from DMs
 
 Open `/admin/creators` and click **Add creator**. Name, Instagram handle, niche,
 country and confirmation of the creator's DM agreement are required. Email,
