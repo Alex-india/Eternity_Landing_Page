@@ -38,13 +38,26 @@ the current results. The selected count is always shown. Use **Clear selection**
 to start a new shortlist. Selections are held in this tab's memory and clear on
 reload/logout. Maximum: 200 profiles per export.
 
-Press **Export selected** to fetch current saved profile data and preview the
-exact selected profiles in selection order. Export includes name, Instagram
-handle/link, niche, country, full follower count, average reel views, indicative
-INR reel rate and profile status. Pending profiles are explicitly marked Pending
-review; unknown values are Not provided. Email, WhatsApp, internal notes, quality
-score, consent details and source tags are excluded at the server. The only
-profile links in the generated message are constructed Instagram links.
+Enter the **Brand name** and optionally a **Campaign niche**, then press **Export
+selected**. The anonymous first-look message starts with `Brand | Niche | N
+creators` and labels profiles Creator A, Creator B, through Creator Z/AA/etc.
+The heading niche defaults to the selected profiles' niche, or Mixed niches when
+several are selected. Changing either heading field invalidates the previous
+preview so you regenerate it before sharing.
+
+The shared message includes niche, country, approximate followers/views (for
+example ~66.5K and ~100K), and `Rate per reel: ₹30,000 + 10% Eternity fee`.
+Only verified/active profiles say **Verified by Eternity**; pending profiles say
+**Pending verification by Eternity**. Unknown counts are Not provided and unknown
+rates are To be confirmed. The footer states: Rates are indicative. Profiles are
+shared after you confirm the terms. Final price, availability and deliverables
+are confirmed by Eternity.
+
+Real names, handles, Instagram links, email, WhatsApp, internal notes, quality
+scores, consent details and source tags are excluded from exported text. A closed
+**Private reference for you** section maps the labels to names/handles inside the
+owner panel only; this reference never enters Copy, Download or the WhatsApp URL.
+Labels reflect the current selection order, not a permanent public identifier.
 
 Use **Copy for WhatsApp**, **Download .txt**, or **Open WhatsApp** (for short
 messages). Clipboard-denied browsers select the text for manual copying. For
@@ -61,8 +74,10 @@ values (for example `niche=Fashion&niche=Lifestyle&status=verified&status=active
 Deployment checks: choose Fashion + Lifestyle, Verified + Active, and a reel-rate
 maximum, then Apply and inspect the results/count. Select profiles on two pages,
 change a filter and confirm the selected count remains; export and confirm only
-those selected profiles appear. Copy/paste into a draft WhatsApp message or open
-the downloaded .txt; verify full numbers and no contact/internal fields. Reset
+those selected profiles appear. Enter a brand name, export, and check the private
+label mapping. Copy/paste into a draft WhatsApp message or open the downloaded
+.txt; verify compact numbers, the 10% fee, and no names/handles/links or contact
+fields. Include a pending record to confirm it is not labelled verified. Reset
 filters, clear selections, then check Edit/Add/Delete still refresh the list.
 
 ## Manually add a creator from DMs

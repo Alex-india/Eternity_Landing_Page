@@ -37,12 +37,14 @@
   const exportPreview = document.getElementById('export-preview');
   const exportText = document.getElementById('export-text');
   const exportMessage = document.getElementById('export-message');
+  const exportBrand = document.getElementById('export-brand');
+  const exportNiche = document.getElementById('export-niche');
   let exporting = false, exportRevision = 0, exportFilename = '';
   const number = (value) => value === null || value === undefined ? 'Unknown' : Number(value).toLocaleString('en-IN');
   function node(tag, text, className) { const element = document.createElement(tag); if (text !== undefined) element.textContent = text; if (className) element.className = className; return element; }
   function cell(row, title, subtitle) { const td = node('td'); td.append(node('strong', title)); if (subtitle !== undefined) td.append(node('small', subtitle)); row.append(td); return td; }
   function updateSelection(invalidate = true) {
-    if (invalidate) { exportRevision++; exportPreview.hidden = true; exportText.value = ''; exportFilename = ''; }
+    if (invalidate) { exportRevision++; exportPreview.hidden = true; exportText.value = ''; exportFilename = ''; document.getElementById('export-references').replaceChildren(); document.getElementById('export-private-reference').open = false; }
     document.getElementById('selected-count').textContent = number(selectedCreators.size) + ' selected';
     document.getElementById('clear-selection').disabled = !selectedCreators.size;
     exportButton.disabled = !selectedCreators.size || exporting || loading || deleting || savingManual;
@@ -61,14 +63,18 @@
     exportMessage.textContent = ''; updateSelection();
   });
   document.getElementById('clear-selection').addEventListener('click', () => { selectedCreators.clear(); exportMessage.textContent = ''; updateSelection(); });
+  for (const field of [exportBrand, exportNiche]) field.addEventListener('input', () => { updateSelection(); exportMessage.textContent = 'Click Export selected to update the message.'; });
   exportButton.addEventListener('click', async () => {
     if (!selectedCreators.size || exporting || loading || deleting || savingManual) return;
+    if (!exportBrand.value.trim()) { exportMessage.textContent = 'Enter the brand name before exporting.'; exportBrand.focus(); return; }
     exporting = true; updateSelection(); const revision = exportRevision;
     exportMessage.textContent = 'Preparing selected profiles...';
     try {
-      const data = await api('/creators/export', { method: 'POST', body: JSON.stringify({ ids: [...selectedCreators] }) });
+      const data = await api('/creators/export', { method: 'POST', body: JSON.stringify({ ids: [...selectedCreators], brandName: exportBrand.value.trim(), campaignNiche: exportNiche.value.trim() }) });
       if (revision !== exportRevision) { exportMessage.textContent = 'Selection changed. Click Export selected again.'; return; }
       exportText.value = data.text; exportFilename = data.filename; exportPreview.hidden = false;
+      const references = document.getElementById('export-references');
+      references.replaceChildren(...(data.references || []).map((reference) => node('li', reference.label + ': ' + reference.name + ' (@' + reference.handle + ')')));
       document.getElementById('export-feedback').textContent = '';
       const whatsapp = document.getElementById('whatsapp-export'), encoded = encodeURIComponent(data.text);
       whatsapp.hidden = encoded.length > 6000;

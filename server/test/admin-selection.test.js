@@ -48,7 +48,7 @@ test('admin selection survives pagination/filtering, exports exact IDs, resets m
     fetch: async (url, options) => {
       requests.push({ url, options });
       const data = url.endsWith('/session') ? { csrfToken: 'test-csrf' }
-        : url.endsWith('/export') ? { count: 2, text: '*Selected shortlist*\nBrand-ready text', filename: 'test.txt' }
+        : url.endsWith('/export') ? { count: 2, text: '*Selected shortlist*\nBrand-ready text', filename: 'test.txt', references: [{ label: 'Creator A', name: 'Private Name', handle: 'private.handle' }] }
           : { creators: [new URL(url, 'https://example.test').searchParams.get('page') === '2' ? second : first], total: 2, totalEntries: 2, limit: 1 };
       return { ok: true, status: 200, json: async () => data };
     },
@@ -64,11 +64,16 @@ test('admin selection survives pagination/filtering, exports exact IDs, resets m
   assert.equal(get('selected-count').textContent, '1 selected'); assert.equal(get('select-page').checked, false);
   get('select-page').checked = true; await get('select-page').fire('change');
   assert.equal(get('selected-count').textContent, '2 selected');
+  await get('export-selected').fire('click'); assert.ok(get('export-message').textContent.includes('brand name')); assert.equal(requests.some((entry) => entry.url.endsWith('/export')), false);
+  get('export-brand').value = 'Acme'; get('export-niche').value = 'Fashion';
   await get('export-selected').fire('click');
   const exported = requests.find((entry) => entry.url.endsWith('/export'));
   assert.deepEqual(JSON.parse(exported.options.body).ids, ['first-id', 'second-id']); assert.equal(exported.options.headers['X-CSRF-Token'], 'test-csrf');
+  assert.equal(JSON.parse(exported.options.body).brandName, 'Acme'); assert.equal(JSON.parse(exported.options.body).campaignNiche, 'Fashion');
   assert.equal(get('export-preview').hidden, false); assert.ok(get('export-text').value.includes('Brand-ready'));
+  assert.ok(get('export-references').children[0].textContent.includes('Private Name')); assert.ok(!get('export-text').value.includes('Private Name'));
   await get('copy-export').fire('click'); assert.equal(copied.length, 1);
+  assert.ok(!copied[0].includes('private.handle'));
   context.navigator.clipboard.writeText = async () => { throw new Error('Clipboard denied'); };
   await get('copy-export').fire('click'); assert.equal(get('export-text').selected, true); assert.ok(get('export-feedback').textContent.includes('copy it manually'));
   fashion.checked = false; await get('filters').fire('submit'); await settle();
