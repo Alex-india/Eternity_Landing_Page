@@ -25,7 +25,8 @@ adding/deleting a creator refreshes the count with the list.
 
 ## Filter and export a brand shortlist
 
-The admin list has a filter sidebar (stacked above results on phones). Expand
+The admin list has compact filters above a full-width list. Advanced filters are
+collapsed by default; rows and actions use compact spacing for quick selection. Expand
 **Niche** or **Status** and tick multiple options. Options within a group match
 any selected value; different groups, search, views/followers/rate/quality ranges,
 entry method, score status and dates apply together. Country and Source accept
