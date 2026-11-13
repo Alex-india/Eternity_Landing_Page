@@ -254,7 +254,12 @@
       else if (control.tagName === 'INPUT') { if (control.type === 'checkbox') control.checked = false; else control.value = ''; }
     }
   }
-  filters.addEventListener('submit', (event) => { event.preventDefault(); if (loading || deleting || savingManual) return; page = 1; editor.hidden = true; load(); });
+  filters.addEventListener('submit', (event) => {
+    event.preventDefault();
+    for (const key of ['status', 'niche']) document.getElementById(key + '-filter').open = false;
+    if (loading || deleting || savingManual) return;
+    page = 1; editor.hidden = true; load();
+  });
   filters.addEventListener('reset', (event) => {
     event.preventDefault(); if (loading || deleting || savingManual) return;
     resetFilters();
